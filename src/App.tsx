@@ -4,17 +4,55 @@ import * as Tone from "tone";
 import "./App.css";
 import EnhancedControls from "./EnhancedControlsFixed";
 
-// General MIDI drum note mapping (partial, can be extended)
+// General MIDI drum note mapping (full, 35–81)
 const DRUM_MAP: Record<number, string> = {
   35: "Acoustic Bass Drum",
   36: "Bass Drum 1",
+  37: "Side Stick",
   38: "Acoustic Snare",
+  39: "Hand Clap",
   40: "Electric Snare",
+  41: "Low Floor Tom",
   42: "Closed Hi-Hat",
+  43: "High Floor Tom",
   44: "Pedal Hi-Hat",
+  45: "Low Tom",
   46: "Open Hi-Hat",
+  47: "Low-Mid Tom",
+  48: "Hi-Mid Tom",
   49: "Crash Cymbal 1",
+  50: "High Tom",
   51: "Ride Cymbal 1",
+  52: "Chinese Cymbal",
+  53: "Ride Bell",
+  54: "Tambourine",
+  55: "Splash Cymbal",
+  56: "Cowbell",
+  57: "Crash Cymbal 2",
+  58: "Vibraslap",
+  59: "Ride Cymbal 2",
+  60: "Hi Bongo",
+  61: "Low Bongo",
+  62: "Mute Hi Conga",
+  63: "Open Hi Conga",
+  64: "Low Conga",
+  65: "High Timbale",
+  66: "Low Timbale",
+  67: "High Agogo",
+  68: "Low Agogo",
+  69: "Cabasa",
+  70: "Maracas",
+  71: "Short Whistle",
+  72: "Long Whistle",
+  73: "Short Guiro",
+  74: "Long Guiro",
+  75: "Claves",
+  76: "Hi Wood Block",
+  77: "Low Wood Block",
+  78: "Mute Cuica",
+  79: "Open Cuica",
+  80: "Mute Triangle",
+  81: "Open Triangle",
 };
 
 // Fix getGridLines to use leftGutter and correct timeline width, and distribute bars/subdivisions evenly.
@@ -181,8 +219,6 @@ function App() {
     isDraggingPlayheadRef.current = isDraggingPlayhead;
   }, [isDraggingPlayhead]);
   const dragPlayheadXRef = useRef<number | null>(null);
-  // Dummy state to force re-render
-  const [dummyTick, setDummyTick] = useState(0);
   const timelineRef = useRef<HTMLDivElement | null>(null);
 
   // Helper to get timeline dimensions
@@ -214,7 +250,7 @@ function App() {
     if (!isDraggingPlayheadRef.current || !parsedMidi) return;
     const playhead = getPlayheadFromPointer(e.clientX);
     dragPlayheadXRef.current = playhead;
-    setDummyTick((tick) => tick + 1); // force re-render
+    setUiPlayhead(playhead);
   };
 
   const handlePlayheadPointerUpWindow = (e: PointerEvent) => {
@@ -863,11 +899,28 @@ function App() {
     }
     const { width, leftGutter, timelineWidth } = getTimelineMetrics();
     const rowHeight = 40;
-    const drumRows = Object.entries(DRUM_MAP);
+    // --- Only show rows for drum notes that actually have notes in the MIDI file ---
+    const NOTE_NAMES = [
+      "C", "B", "A#", "A", "G#", "G", "F#", "F", "E", "D#", "D", "C#"
+    ];
+    function getNoteName(midi: number) {
+      const octave = Math.floor(midi / 12) - 1;
+      const name = NOTE_NAMES[midi % 12];
+      return `${name}${octave}`;
+    }
+    // Find all drum notes present in the MIDI file (35-81)
+    const allDrumNotes = parsedMidi.tracks.flatMap((track) => track.notes.map((n) => n.midi)).filter((n) => n >= 35 && n <= 81);
+    const uniqueDrumNotes = Array.from(new Set(allDrumNotes));
+    // Build drumRows only for notes that have at least one note in the MIDI file
+    const drumRows = uniqueDrumNotes
+      .sort((a, b) => b - a)
+      .map((note) => [
+        note,
+        DRUM_MAP[note] ? DRUM_MAP[note] + ` (${getNoteName(note)})` : getNoteName(note),
+      ]);
+    // For each row, collect all notes in the MIDI file for that note
     const drumNotesByRow = drumRows.map(([note]) =>
-      parsedMidi.tracks.flatMap((track) =>
-        track.notes.filter((n) => n.midi.toString() === note)
-      )
+      parsedMidi.tracks.flatMap((track) => track.notes.filter((n) => n.midi === note))
     );
     // --- Calculate measures from time signature and duration ---
     const ts = getTimeSignature();
@@ -886,6 +939,17 @@ function App() {
     const maxTime = parsedMidi.duration;
     // --- Playhead position for drag or normal ---
     const playheadNorm = isDraggingPlayhead && dragPlayheadXRef.current !== null ? dragPlayheadXRef.current : uiPlayhead;
+    // --- Velocity bar chart section ---
+    // Collect all notes (with time and velocity) for visible drumRows
+    const velocityNotes = drumRows.flatMap(([note], rowIdx) =>
+      drumNotesByRow[rowIdx].map((noteObj) => ({
+        time: noteObj.time,
+        velocity: noteObj.velocity,
+      }))
+    );
+    // Bar chart dimensions
+    const barChartHeight = 100;
+    const barChartY = rowHeight * drumRows.length + 40 + 16; // below timeline SVG
     return (
       <div
         ref={timelineRef}
@@ -901,7 +965,7 @@ function App() {
         <svg
           id="timeline-svg"
           width={width + leftGutter}
-          height={rowHeight * drumRows.length + 40}
+          height={rowHeight * drumRows.length + 40 + barChartHeight + 32}
           style={{ display: "block" }}
         >
           {/* --- Transparent drag area over the timeline --- */}
@@ -1024,6 +1088,47 @@ function App() {
             style={{ cursor: "ew-resize" }}
             pointerEvents="none"
           />
+          {/* --- Velocity bar chart --- */}
+          <g>
+            <rect
+              x={leftGutter}
+              y={barChartY}
+              width={timelineWidth}
+              height={barChartHeight}
+              fill="#f0f0f0"
+              stroke="#bbb"
+              strokeWidth={1}
+              rx={8}
+            />
+            {/* Draw a bar for each note's velocity */}
+            {velocityNotes.map((n, i) => {
+              const x = leftGutter + (n.time / maxTime) * timelineWidth;
+              const barW = 6;
+              const barH = Math.max(2, n.velocity * barChartHeight);
+              return (
+                <rect
+                  key={i + "-vel-bar"}
+                  x={x - barW / 2}
+                  y={barChartY + barChartHeight - barH}
+                  width={barW}
+                  height={barH}
+                  fill="#43a047"
+                  opacity={0.7}
+                  rx={2}
+                />
+              );
+            })}
+            {/* Y axis label */}
+            <text
+              x={leftGutter - 12}
+              y={barChartY + 12}
+              fontSize={13}
+              fill="#888"
+              textAnchor="end"
+            >
+              Velocity
+            </text>
+          </g>
         </svg>
       </div>
     );
