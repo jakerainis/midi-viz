@@ -10,24 +10,20 @@ const EnhancedControls = ({
   isPlaying,
   isPaused,
   parsedMidi,
-  mapping,
   handlePause,
   handleResume,
   handlePlay,
   handleStop,
-  lastButtonClickRef,
 }: {
   tempo: number;
   handleTempoChange: (tempo: number) => void;
   isPlaying: boolean;
   isPaused: boolean;
   parsedMidi: unknown;
-  mapping: Record<number, string>;
   handlePause: () => void;
   handleResume: () => void;
   handlePlay: () => void;
   handleStop: () => void;
-  lastButtonClickRef: React.MutableRefObject<number>;
 }) => (
   <div
     style={{
@@ -69,7 +65,7 @@ const EnhancedControls = ({
           handlePlay();
         }
       }}
-      disabled={!parsedMidi || Object.values(mapping).every((v) => !v)}
+      disabled={!parsedMidi}
       style={{
         fontSize: 18,
         padding: "0.5em 2em",
@@ -82,10 +78,7 @@ const EnhancedControls = ({
         color: "white",
         borderRadius: "4px",
         border: "none",
-        cursor:
-          !parsedMidi || Object.values(mapping).every((v) => !v)
-            ? "not-allowed"
-            : "pointer",
+        cursor: !parsedMidi ? "not-allowed" : "pointer",
         transition: "background-color 0.2s ease",
       }}
     >

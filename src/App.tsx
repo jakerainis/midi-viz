@@ -55,6 +55,57 @@ const DRUM_MAP: Record<number, string> = {
   81: "Open Triangle",
 };
 
+// Map General MIDI drum notes to available /public/drums samples
+const DRUM_SAMPLE_MAP: Record<number, string> = {
+  35: "kick.wav", // Acoustic Bass Drum
+  36: "kick.wav", // Bass Drum 1
+  37: "snare.wav", // Side Stick (fallback to snare)
+  38: "snare.wav", // Acoustic Snare
+  39: "snare.wav", // Hand Clap (fallback to snare)
+  40: "snare.wav", // Electric Snare
+  41: "floor-tom.wav", // Low Floor Tom
+  42: "hi-hat-closed.wav", // Closed Hi-Hat
+  43: "floor-tom.wav", // High Floor Tom
+  44: "hi-hat-pedal.wav", // Pedal Hi-Hat
+  45: "rack-tom-1.wav", // Low Tom
+  46: "hi-hat-open.wav", // Open Hi-Hat
+  47: "rack-tom-2.wav", // Low-Mid Tom
+  48: "rack-tom-2.wav", // Hi-Mid Tom
+  49: "crash.wav", // Crash Cymbal 1
+  50: "rack-tom-1.wav", // High Tom
+  51: "ride.wav", // Ride Cymbal 1
+  52: "china.wav", // Chinese Cymbal
+  53: "ride.wav", // Ride Bell (fallback to ride)
+  54: "snare.wav", // Tambourine (fallback to snare)
+  55: "splash.wav", // Splash Cymbal
+  56: "snare.wav", // Cowbell (fallback to snare)
+  57: "crash.wav", // Crash Cymbal 2
+  58: "snare.wav", // Vibraslap (fallback to snare)
+  59: "ride.wav", // Ride Cymbal 2
+  60: "snare.wav", // Hi Bongo (fallback to snare)
+  61: "snare.wav", // Low Bongo (fallback to snare)
+  62: "snare.wav", // Mute Hi Conga (fallback to snare)
+  63: "snare.wav", // Open Hi Conga (fallback to snare)
+  64: "floor-tom.wav", // Low Conga (fallback to floor tom)
+  65: "rack-tom-1.wav", // High Timbale (fallback to rack tom)
+  66: "rack-tom-2.wav", // Low Timbale (fallback to rack tom)
+  67: "snare.wav", // High Agogo (fallback to snare)
+  68: "snare.wav", // Low Agogo (fallback to snare)
+  69: "snare.wav", // Cabasa (fallback to snare)
+  70: "hi-hat-closed.wav", // Maracas (fallback to closed hat)
+  71: "snare.wav", // Short Whistle (fallback to snare)
+  72: "snare.wav", // Long Whistle (fallback to snare)
+  73: "snare.wav", // Short Guiro (fallback to snare)
+  74: "snare.wav", // Long Guiro (fallback to snare)
+  75: "snare.wav", // Claves (fallback to snare)
+  76: "hi-hat-closed.wav", // Hi Wood Block (fallback to closed hat)
+  77: "floor-tom.wav", // Low Wood Block (fallback to floor tom)
+  78: "snare.wav", // Mute Cuica (fallback to snare)
+  79: "snare.wav", // Open Cuica (fallback to snare)
+  80: "hi-hat-closed.wav", // Mute Triangle (fallback to closed hat)
+  81: "hi-hat-open.wav", // Open Triangle (fallback to open hat)
+};
+
 // Fix getGridLines to use leftGutter and correct timeline width, and distribute bars/subdivisions evenly.
 const getGridLines = (
   leftGutter: number,
@@ -181,17 +232,15 @@ function getNativeAudioContext(ctx: unknown): AudioContext | null {
 
 function App() {
   const [midiFiles, setMidiFiles] = useState<File[]>([]);
-  const [drumSamples, setDrumSamples] = useState<File[]>([]);
   const [tempo, setTempo] = useState(120);
   const [parsedMidi, setParsedMidi] = useState<Midi | null>(null);
   const [selectedMidiIdx, setSelectedMidiIdx] = useState<number | null>(null);
-  const [mapping, setMapping] = useState<Record<number, string>>({}); // note -> sample objectURL
   const playheadRef = useRef<number | null>(null);
   const playersRef = useRef<Record<number, Tone.Player>>({});
   // Store scheduled transport event IDs for cleanup
   const noteTimeoutsRef = useRef<number[]>([]);
   // For debouncing UI interactions
-  const lastButtonClickRef = useRef<number>(0);
+  // const lastButtonClickRef = useRef<number>(0); // Removed, unused
 
   // Replace isPlaying, isPaused, playhead, pausedPositionRef with reducer
   const [playback, dispatchPlayback] = useReducer(
@@ -269,11 +318,21 @@ function App() {
       const midiTempo = parsedMidi.header.tempos[0]?.bpm || 120;
       const tempoRatio = tempo / midiTempo;
       const jumpSeconds = playhead * (parsedMidi.duration / tempoRatio);
-      dispatchPlayback({ type: "PAUSE", position: playhead, seconds: jumpSeconds });
+      dispatchPlayback({
+        type: "PAUSE",
+        position: playhead,
+        seconds: jumpSeconds,
+      });
     }
     dragPlayheadXRef.current = null;
-    window.removeEventListener("pointermove", handlePlayheadPointerMoveWindow as EventListener);
-    window.removeEventListener("pointerup", handlePlayheadPointerUpWindow as EventListener);
+    window.removeEventListener(
+      "pointermove",
+      handlePlayheadPointerMoveWindow as EventListener
+    );
+    window.removeEventListener(
+      "pointerup",
+      handlePlayheadPointerUpWindow as EventListener
+    );
   };
 
   // Helper to get time signature (with fallback)
@@ -282,9 +341,15 @@ function App() {
       const ts = parsedMidi.header.timeSignatures[0];
       // Support both .numerator/.denominator and .timeSignature array
       if (Array.isArray(ts.timeSignature) && ts.timeSignature.length === 2) {
-        return { numerator: ts.timeSignature[0], denominator: ts.timeSignature[1] };
+        return {
+          numerator: ts.timeSignature[0],
+          denominator: ts.timeSignature[1],
+        };
       }
-      if (typeof ts.numerator === 'number' && typeof ts.denominator === 'number') {
+      if (
+        typeof ts.numerator === "number" &&
+        typeof ts.denominator === "number"
+      ) {
         return { numerator: ts.numerator, denominator: ts.denominator };
       }
     }
@@ -302,65 +367,6 @@ function App() {
         setParsedMidi(midi);
         setSelectedMidiIdx(0);
       }
-    }
-  };
-
-  // Handle drum sample upload
-  const handleSampleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const files = Array.from(e.target.files);
-      setDrumSamples(files);
-      // Reset mapping when new samples are uploaded
-      setMapping({});
-    }
-  };
-
-  // Handle mapping change
-  const handleMappingChange = (note: number, fileName: string) => {
-    // Update the mapping in state
-    setMapping((prev) => ({ ...prev, [note]: fileName }));
-
-    // If we're playing, restart playback to apply the new sample mapping
-    // This avoids the "buffer is not set or not loaded" error
-    if (playback.isPlaying) {
-      console.log(`Changing sample for note ${note} to ${fileName}`);
-
-      // Stop current playback
-      handleStop();
-
-      // Longer delay to ensure everything is properly cleaned up
-      setTimeout(() => {
-        // Pre-load the sample before restarting playback
-        const preloadSample = async () => {
-          try {
-            // Find the sample file
-            const file = drumSamples.find((f) => f.name === fileName);
-
-            // Create a temporary buffer to ensure it loads
-            const buffer = new Tone.ToneAudioBuffer();
-            let url = "";
-
-            if (file && file.size > 0) {
-              url = URL.createObjectURL(file);
-            } else {
-              url = `/sample-drums/${fileName}`;
-            }
-
-            // Load the buffer
-            await buffer.load(url);
-            console.log(`Successfully pre-loaded sample: ${fileName}`);
-
-            // Now restart playback with the updated mapping
-            handlePlay();
-          } catch (err) {
-            console.error(`Failed to pre-load sample: ${fileName}`, err);
-            // Still attempt to play even if preload failed
-            handlePlay();
-          }
-        };
-
-        preloadSample();
-      }, 300); // Increased timeout for more reliable cleanup
     }
   };
 
@@ -459,7 +465,7 @@ function App() {
   // Playback logic
   // Update handlePlay to accept an optional startPosition argument
   const handlePlay = async (startPosition: number | null = null) => {
-    if (!parsedMidi || Object.keys(mapping).length === 0) return;
+    if (!parsedMidi) return;
     cleanupPlayback();
     // If resuming, set playhead to correct position in PLAY action
     const midiTempo = parsedMidi.header.tempos[0]?.bpm || 120;
@@ -516,96 +522,39 @@ function App() {
       const players: Record<number, Tone.Player> = {};
       playersRef.current = players;
 
-      // Pre-load all unique samples
-      const uniqueSampleNames = [
-        ...new Set(Object.values(mapping).filter(Boolean)),
-      ];
+      // Pre-load all unique samples from DRUM_SAMPLE_MAP actually used in the MIDI
+      const usedNotes = new Set(
+        parsedMidi.tracks.flatMap((track) => track.notes.map((n) => n.midi))
+      );
+      const uniqueSampleNames = Array.from(
+        new Set(
+          Array.from(usedNotes)
+            .map((note) => DRUM_SAMPLE_MAP[note])
+            .filter(Boolean)
+        )
+      );
       const sampleBuffers: Record<string, Tone.ToneAudioBuffer> = {};
-
-      // Load all unique samples first
-      const loadPromises = [];
-
-      for (let i = 0; i < uniqueSampleNames.length; i++) {
-        const sampleName = uniqueSampleNames[i];
-        let url = "";
-        const file = drumSamples.find((f) => f.name === sampleName);
-
-        if (file && file.size > 0) {
-          url = URL.createObjectURL(file);
-        } else {
-          url = `/sample-drums/${sampleName}`;
+      const loadPromises = uniqueSampleNames.map(async (sampleName) => {
+        const url = `/drums/${sampleName}`;
+        try {
+          const buffer = new Tone.ToneAudioBuffer();
+          await buffer.load(url);
+          sampleBuffers[sampleName] = buffer;
+        } catch (err) {
+          console.error(`Failed to load sample: ${sampleName}`, err);
         }
-
-        // Create a promise for each buffer load
-        const loadPromise = (async () => {
-          try {
-            console.log(`Loading sample: ${sampleName} from ${url}`);
-            const buffer = new Tone.ToneAudioBuffer();
-            await buffer.load(url);
-
-            // Verify the buffer loaded successfully
-            if (buffer.loaded && buffer.length > 0) {
-              console.log(`Successfully loaded sample: ${sampleName}`);
-              sampleBuffers[sampleName] = buffer;
-              return true;
-            } else {
-              console.error(
-                `Buffer for ${sampleName} claims to be loaded but may be empty`
-              );
-              return false;
-            }
-          } catch (err) {
-            console.error(`Failed to load sample: ${sampleName}`, err);
-            return false;
-          }
-        })();
-
-        loadPromises.push(loadPromise);
-      }
-
-      // Wait for all samples to load (or fail)
+      });
       await Promise.allSettled(loadPromises);
 
-      // Check if we have any successfully loaded samples
-      if (Object.keys(sampleBuffers).length === 0) {
-        console.error(
-          "No samples were successfully loaded. Playback may not work correctly."
-        );
-      } else {
-        console.log(
-          `Successfully loaded ${Object.keys(sampleBuffers).length}/${
-            uniqueSampleNames.length
-          } samples`
-        );
-      }
-
       // Create players for each note
-      for (const noteStr in mapping) {
-        const note = Number(noteStr);
-        const sampleName = mapping[note];
-
-        if (!sampleName) continue;
-
-        // Check if we have a loaded buffer
-        if (!sampleBuffers[sampleName]) {
-          console.warn(
-            `Missing buffer for sample: ${sampleName}, skipping note ${note}`
-          );
-          continue;
-        }
-
+      for (const note of usedNotes) {
+        const sampleName = DRUM_SAMPLE_MAP[note];
+        if (!sampleName || !sampleBuffers[sampleName]) continue;
         try {
           const player = new Tone.Player();
           player.buffer = sampleBuffers[sampleName];
           player.toDestination();
           players[note] = player;
-
-          // Verify the buffer is actually loaded
-          if (!player.buffer.loaded) {
-            console.warn(
-              `Buffer for ${sampleName} claims to be loaded but may not be ready`
-            );
-          }
         } catch (err) {
           console.error(
             `Error creating player for note ${note} with sample ${sampleName}:`,
@@ -683,7 +632,7 @@ function App() {
       const effectiveStart = actualStartPosition ?? 0;
       const scheduledNotes = allNotes.filter(
         (note) =>
-          mapping[note.midi] &&
+          DRUM_SAMPLE_MAP[note.midi] &&
           playersRef.current[note.midi] &&
           note.time / tempoRatio >= effectiveStart
       );
@@ -901,7 +850,18 @@ function App() {
     const rowHeight = 40;
     // --- Only show rows for drum notes that actually have notes in the MIDI file ---
     const NOTE_NAMES = [
-      "C", "B", "A#", "A", "G#", "G", "F#", "F", "E", "D#", "D", "C#"
+      "C",
+      "B",
+      "A#",
+      "A",
+      "G#",
+      "G",
+      "F#",
+      "F",
+      "E",
+      "D#",
+      "D",
+      "C#",
     ];
     function getNoteName(midi: number) {
       const octave = Math.floor(midi / 12) - 1;
@@ -909,18 +869,24 @@ function App() {
       return `${name}${octave}`;
     }
     // Find all drum notes present in the MIDI file (35-81)
-    const allDrumNotes = parsedMidi.tracks.flatMap((track) => track.notes.map((n) => n.midi)).filter((n) => n >= 35 && n <= 81);
+    const allDrumNotes = parsedMidi.tracks
+      .flatMap((track) => track.notes.map((n) => n.midi))
+      .filter((n) => n >= 35 && n <= 81);
     const uniqueDrumNotes = Array.from(new Set(allDrumNotes));
     // Build drumRows only for notes that have at least one note in the MIDI file
     const drumRows = uniqueDrumNotes
       .sort((a, b) => b - a)
       .map((note) => [
         note,
-        DRUM_MAP[note] ? DRUM_MAP[note] + ` (${getNoteName(note)})` : getNoteName(note),
+        DRUM_MAP[note]
+          ? DRUM_MAP[note] + ` (${getNoteName(note)})`
+          : getNoteName(note),
       ]);
     // For each row, collect all notes in the MIDI file for that note
     const drumNotesByRow = drumRows.map(([note]) =>
-      parsedMidi.tracks.flatMap((track) => track.notes.filter((n) => n.midi === note))
+      parsedMidi.tracks.flatMap((track) =>
+        track.notes.filter((n) => n.midi === note)
+      )
     );
     // --- Calculate measures from time signature and duration ---
     const ts = getTimeSignature();
@@ -938,10 +904,13 @@ function App() {
     );
     const maxTime = parsedMidi.duration;
     // --- Playhead position for drag or normal ---
-    const playheadNorm = isDraggingPlayhead && dragPlayheadXRef.current !== null ? dragPlayheadXRef.current : uiPlayhead;
+    const playheadNorm =
+      isDraggingPlayhead && dragPlayheadXRef.current !== null
+        ? dragPlayheadXRef.current
+        : uiPlayhead;
     // --- Velocity bar chart section ---
     // Collect all notes (with time and velocity) for visible drumRows
-    const velocityNotes = drumRows.flatMap(([note], rowIdx) =>
+    const velocityNotes = drumRows.flatMap(([,], rowIdx) =>
       drumNotesByRow[rowIdx].map((noteObj) => ({
         time: noteObj.time,
         velocity: noteObj.velocity,
@@ -983,8 +952,14 @@ function App() {
               const playhead = getPlayheadFromPointer(e.clientX);
               dragPlayheadXRef.current = playhead;
               document.body.style.userSelect = "none";
-              window.addEventListener("pointermove", handlePlayheadPointerMoveWindow as EventListener);
-              window.addEventListener("pointerup", handlePlayheadPointerUpWindow as EventListener);
+              window.addEventListener(
+                "pointermove",
+                handlePlayheadPointerMoveWindow as EventListener
+              );
+              window.addEventListener(
+                "pointerup",
+                handlePlayheadPointerUpWindow as EventListener
+              );
             }}
           />
           {/* Grid background */}
@@ -1037,28 +1012,6 @@ function App() {
               >
                 {label}
               </text>
-              {/* Mapping dropdown */}
-              <foreignObject
-                x={leftGutter - 90}
-                y={rowHeight * rowIdx + 26}
-                width={90}
-                height={rowHeight - 8}
-              >
-                <select
-                  style={{ width: "88px", fontSize: 14, padding: 2 }}
-                  value={mapping[Number(note)] || ""}
-                  onChange={(e) =>
-                    handleMappingChange(Number(note), e.target.value)
-                  }
-                >
-                  <option value="">-- None --</option>
-                  {drumSamples.map((file, idx) => (
-                    <option key={idx} value={file.name}>
-                      {file.name}
-                    </option>
-                  ))}
-                </select>
-              </foreignObject>
               {/* Drum hits */}
               {drumNotesByRow[rowIdx].map((noteObj, i) => {
                 const x = leftGutter + (noteObj.time / maxTime) * timelineWidth;
@@ -1147,27 +1100,7 @@ function App() {
         ]);
         setSelectedMidiIdx(0);
       });
-    // Preload drum samples from public/sample-drums
-    const drumSampleNames = [
-      "FloorTom_Direct_v01_h01.wav",
-      "Istanbul_Radiant_6_Splash-01.wav",
-      "Kick_Direct_v01_h01.wav",
-      "Masterwork_RockMaster_18_Crash-10.wav",
-      "Meinl_Marathon_18_China-07.wav",
-      "RackTom1_Direct_v01_h01.wav",
-      "RackTom2_Direct_v01_h01.wav",
-      "Snare_Direct_v01_h01.wav",
-      "Solar_20_Ride-02.wav",
-    ];
-    const drumFiles = drumSampleNames.map((name) => new File([], name));
-    setDrumSamples(drumFiles);
-    // Randomly map drum samples to DRUM_MAP
-    const sampleMap: Record<number, string> = {};
-    const shuffled = [...drumSampleNames].sort(() => 0.5 - Math.random());
-    Object.keys(DRUM_MAP).forEach((note, i) => {
-      sampleMap[Number(note)] = shuffled[i % shuffled.length];
-    });
-    setMapping(sampleMap);
+    // No drum sample preload or mapping needed
   }, []);
 
   // Set tempo to MIDI file's tempo on load
@@ -1202,155 +1135,273 @@ function App() {
     }
   };
 
+  // --- Drawer state ---
+  const [drawerOpen, setDrawerOpen] = useState(true);
+  const [drawerWidth] = useState(320); // Remove setDrawerWidth if not used
+  const minDrawerWidth = 200;
+  const maxDrawerWidth = 600;
+  const isResizingDrawer = useRef(false);
+
   return (
-    <div className="App" style={{ paddingBottom: 120 }}>
-      <h1>Drum MIDI Preview Tool</h1>
-      <section>
-        <h2>1. Upload MIDI Files</h2>
-        <input
-          type="file"
-          accept=".mid,.midi"
-          multiple
-          onChange={handleMidiUpload}
-        />
-        <div>
-          {midiFiles.length > 0 && (
-            <ul>
-              {midiFiles.map((file, idx) => (
-                <li key={idx}>
-                  <button
-                    onClick={() => handleSelectMidi(idx)}
-                    style={{
-                      fontWeight: idx === selectedMidiIdx ? "bold" : "normal",
-                    }}
-                  >
-                    {file.name}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </section>
-      <section>
-        <h2>2. Upload Drum Samples</h2>
-        <input
-          type="file"
-          accept="audio/*"
-          multiple
-          onChange={handleSampleUpload}
-        />
-        <div>
-          {drumSamples.length > 0 && (
-            <ul>
-              {drumSamples.map((file, idx) => (
-                <li key={idx}>{file.name}</li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </section>
-      <section>
-        <h2>3. Timeline Visualization</h2>
-        {/* Subdivision select */}
-        <div
-          style={{
-            marginBottom: 8,
-            textAlign: "left",
-            maxWidth: 1220,
-            margin: "0 auto",
-          }}
-        >
-          <label
-            htmlFor="subdivision-select"
-            style={{ fontWeight: 500, marginRight: 8 }}
+    <div
+      className="App"
+      style={{
+        height: "100vh",
+        width: "100vw",
+        overflow: "hidden",
+        display: "flex",
+        flexDirection: "row",
+        background: "#f4f4f4",
+        position: "relative",
+        padding: 0,
+        margin: 0,
+      }}
+    >
+      {/* --- Persistent Drawer Toggle Button --- */}
+      <button
+        onClick={() => setDrawerOpen((open) => !open)}
+        style={{
+          position: "absolute",
+          top: 32,
+          left: drawerOpen ? (drawerWidth - 18) : 0,
+          width: 32,
+          height: 32,
+          borderRadius: "50%",
+          border: "1.5px solid #bbb",
+          background: "#fff",
+          color: "#222",
+          boxShadow: "0 2px 8px #0002",
+          zIndex: 500,
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontWeight: 700,
+          fontSize: 18,
+          padding: 0,
+          transition: "left 0.2s",
+        }}
+        title={drawerOpen ? "Hide sidebar" : "Show sidebar"}
+      >
+        {drawerOpen ? "⟨" : "⟩"}
+      </button>
+      {/* --- Left Drawer --- */}
+      <div
+        style={{
+          width: drawerOpen ? drawerWidth : 0,
+          minWidth: drawerOpen ? minDrawerWidth : 0,
+          maxWidth: maxDrawerWidth,
+          transition: "width 0.2s cubic-bezier(.4,2,.6,1)",
+          background: "#222c",
+          height: "100vh",
+          boxShadow: drawerOpen ? "2px 0 12px #0002" : undefined,
+          position: "relative",
+          zIndex: 200,
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+        }}
+      >
+        {/* Drawer Content */}
+        {drawerOpen && (
+          <div
+            style={{
+              padding: "32px 18px 18px 18px",
+              overflowY: "auto",
+              height: "100%",
+              background: "#222",
+              color: "#fff",
+              display: "flex",
+              flexDirection: "column",
+              gap: 24,
+            }}
           >
-            Grid Subdivision:
-          </label>
-          <select
-            id="subdivision-select"
-            value={subdivision}
-            onChange={(e) => setSubdivision(Number(e.target.value))}
-            style={{ fontSize: 15, padding: "2px 8px" }}
-          >
-            {subdivisionOptions.map((opt) => (
-              <option key={opt} value={opt}>
-                1/{opt}
-              </option>
-            ))}
-          </select>
+            <h2 style={{ margin: 0, fontSize: 22 }}>MIDI Files</h2>
+            <input
+              type="file"
+              accept=".mid,.midi"
+              multiple
+              onChange={handleMidiUpload}
+              style={{ marginBottom: 12 }}
+            />
+            <div style={{ flex: 1, overflowY: "auto" }}>
+              {midiFiles.length > 0 ? (
+                <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+                  {midiFiles.map((file, idx) => (
+                    <li key={idx} style={{ marginBottom: 6 }}>
+                      <button
+                        onClick={() => handleSelectMidi(idx)}
+                        style={{
+                          width: "100%",
+                          textAlign: "left",
+                          background:
+                            idx === selectedMidiIdx ? "#1976d2" : "#333",
+                          color: idx === selectedMidiIdx ? "#fff" : "#eee",
+                          border: "none",
+                          borderRadius: 4,
+                          padding: "8px 10px",
+                          fontWeight: idx === selectedMidiIdx ? 700 : 400,
+                          fontSize: 15,
+                          cursor: "pointer",
+                          boxShadow:
+                            idx === selectedMidiIdx
+                              ? "0 2px 8px #1976d255"
+                              : undefined,
+                          transition: "background 0.15s, color 0.15s",
+                        }}
+                      >
+                        {file.name}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div style={{ color: "#aaa", fontSize: 15 }}>
+                  No MIDI files loaded.
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+        {/* Drawer Resize Handle */}
+        {drawerOpen && (
+          <div
+            onMouseDown={() => {
+              isResizingDrawer.current = true;
+            }}
+            style={{
+              position: "absolute",
+              top: 0,
+              right: 0,
+              width: 8,
+              height: "100%",
+              cursor: "ew-resize",
+              zIndex: 250,
+              background: "#0000",
+            }}
+            title="Drag to resize sidebar"
+          />
+        )}
+      </div>
+      {/* --- Main Content --- */}
+      <div
+        style={{
+          flex: 1,
+          height: "100vh",
+          overflow: "auto",
+          display: "flex",
+          flexDirection: "column",
+          position: "relative",
+        }}
+      >
+        <div style={{ padding: "32px 0 0 0", flex: 1, minHeight: 0 }}>
+          <section style={{ marginLeft: 0, marginTop: 12 }}>
+            {/* Timeline and grid subdivision select */}
+            <div
+              style={{
+                marginBottom: 8,
+                textAlign: "left",
+                maxWidth: 1220,
+                margin: "0 auto",
+                paddingLeft: 32,
+              }}
+            >
+              <label
+                htmlFor="subdivision-select"
+                style={{ fontWeight: 500, marginRight: 8 }}
+              >
+                Grid Subdivision:
+              </label>
+              <select
+                id="subdivision-select"
+                value={subdivision}
+                onChange={(e) => setSubdivision(Number(e.target.value))}
+                style={{ fontSize: 15, padding: "2px 8px" }}
+              >
+                {subdivisionOptions.map((opt) => (
+                  <option key={opt} value={opt}>
+                    1/{opt}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {/* Full-width timeline container */}
+            <div style={{ width: "100%", padding: 0, margin: 0 }}>
+              {renderTimeline()}
+            </div>
+          </section>
+          {/* MIDI Info Box */}
+          {parsedMidi && (
+            <div
+              style={{
+                margin: "24px auto 0 auto",
+                maxWidth: 1220,
+                background: "#f8fafc",
+                border: "1.5px solid #bbb",
+                borderRadius: 8,
+                padding: "18px 32px 14px 32px",
+                color: "#222",
+                fontSize: 17,
+                boxShadow: "0 2px 8px 0 rgba(0,0,0,0.04)",
+                display: "flex",
+                gap: 40,
+                justifyContent: "flex-start",
+                alignItems: "center",
+              }}
+            >
+              {/* Number of notes */}
+              <div>
+                <span style={{ fontWeight: 600 }}>Notes:</span>{" "}
+                {parsedMidi.tracks.reduce((acc, t) => acc + t.notes.length, 0)}
+              </div>
+              {/* Note range */}
+              <div>
+                <span style={{ fontWeight: 600 }}>Note Range:</span>{" "}
+                {(() => {
+                  const allNotes = parsedMidi.tracks.flatMap((t) =>
+                    t.notes.map((n) => n.midi)
+                  );
+                  if (allNotes.length === 0) return "N/A";
+                  const min = Math.min(...allNotes);
+                  const max = Math.max(...allNotes);
+                  return `${min} - ${max}`;
+                })()}
+              </div>
+              {/* Time signature */}
+              <div>
+                <span style={{ fontWeight: 600 }}>Time Signature:</span>{" "}
+                {(() => {
+                  const ts = getTimeSignature();
+                  return ts.numerator && ts.denominator
+                    ? `${ts.numerator}/${ts.denominator}`
+                    : "4/4 (default)";
+                })()}
+              </div>
+              {/* BPM */}
+              <div>
+                <span style={{ fontWeight: 600 }}>BPM:</span>{" "}
+                {parsedMidi.header.tempos.length > 0
+                  ? Math.round(parsedMidi.header.tempos[0].bpm)
+                  : "N/A"}
+              </div>
+            </div>
+          )}
+          {/* --- Controls Bar below timeline and info box --- */}
+          <div style={{ margin: "32px auto 0 auto", maxWidth: 1220 }}>
+            <EnhancedControls
+              tempo={tempo}
+              handleTempoChange={handleTempoChange}
+              isPlaying={playback.isPlaying}
+              isPaused={playback.isPaused}
+              parsedMidi={parsedMidi}
+              handlePause={handlePause}
+              handleResume={handleResume}
+              handlePlay={handlePlay}
+              handleStop={handleStop}
+            />
+          </div>
         </div>
-        {renderTimeline()}
-      </section>
-      {/* MIDI Info Box */}
-      {parsedMidi && (
-        <div
-          style={{
-            margin: "24px auto 0 auto",
-            maxWidth: 1220,
-            background: "#f8fafc",
-            border: "1.5px solid #bbb",
-            borderRadius: 8,
-            padding: "18px 32px 14px 32px",
-            color: "#222",
-            fontSize: 17,
-            boxShadow: "0 2px 8px 0 rgba(0,0,0,0.04)",
-            display: "flex",
-            gap: 40,
-            justifyContent: "flex-start",
-            alignItems: "center",
-          }}
-        >
-          {/* Number of notes */}
-          <div>
-            <span style={{ fontWeight: 600 }}>Notes:</span>{" "}
-            {parsedMidi.tracks.reduce((acc, t) => acc + t.notes.length, 0)}
-          </div>
-          {/* Note range */}
-          <div>
-            <span style={{ fontWeight: 600 }}>Note Range:</span>{" "}
-            {(() => {
-              const allNotes = parsedMidi.tracks.flatMap((t) =>
-                t.notes.map((n) => n.midi)
-              );
-              if (allNotes.length === 0) return "N/A";
-              const min = Math.min(...allNotes);
-              const max = Math.max(...allNotes);
-              return `${min} - ${max}`;
-            })()}
-          </div>
-          {/* Time signature */}
-          <div>
-            <span style={{ fontWeight: 600 }}>Time Signature:</span>{" "}
-            {(() => {
-              const ts = getTimeSignature();
-              return ts.numerator && ts.denominator
-                ? `${ts.numerator}/${ts.denominator}`
-                : "4/4 (default)";
-            })()}
-          </div>
-          {/* BPM */}
-          <div>
-            <span style={{ fontWeight: 600 }}>BPM:</span>{" "}
-            {parsedMidi.header.tempos.length > 0
-              ? Math.round(parsedMidi.header.tempos[0].bpm)
-              : "N/A"}
-          </div>
-        </div>
-      )}
-      <EnhancedControls
-        tempo={tempo}
-        handleTempoChange={handleTempoChange}
-        isPlaying={playback.isPlaying}
-        isPaused={playback.isPaused}
-        parsedMidi={parsedMidi}
-        mapping={mapping}
-        handlePause={handlePause}
-        handleResume={handleResume}
-        handlePlay={handlePlay}
-        handleStop={handleStop}
-        lastButtonClickRef={lastButtonClickRef}
-      />
+      </div>
     </div>
   );
 }
