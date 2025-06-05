@@ -414,21 +414,6 @@ function App() {
     );
   };
 
-  // Helper to get time signature (with fallback)
-  const getTimeSignature = () => {
-    if (parsedMidi && parsedMidi.header.timeSignatures.length > 0) {
-      const ts = parsedMidi.header.timeSignatures[0];
-      // Use .timeSignature array (e.g., [4,4])
-      if (Array.isArray(ts.timeSignature) && ts.timeSignature.length === 2) {
-        return {
-          numerator: ts.timeSignature[0],
-          denominator: ts.timeSignature[1],
-        };
-      }
-    }
-    return { numerator: 4, denominator: 4 }; // default 4/4
-  };
-
   // Handle MIDI file upload and parse the first file
   const handleMidiUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -445,7 +430,11 @@ function App() {
 
   // Select a different MIDI file
   const handleSelectMidi = async (idx: number) => {
+    stopAllPlayback(); // Stop playback before loading new file
+    setUiPlayhead(0); // Reset playhead to beginning
+    dispatchPlayback({ type: "STOP" }); // Reset playback state to initial
     setSelectedMidiIdx(idx);
+    setSelectedPreloadedMidi(null); // Clear selected preloaded MIDI
     const file = midiFiles[idx];
     const arrayBuffer = await file.arrayBuffer();
     const midi = new Midi(arrayBuffer);
@@ -475,11 +464,20 @@ function App() {
     setExpandedFolders((prev) => ({ ...prev, [folder]: !prev[folder] }));
   };
 
+  // Add state to track selected preloaded MIDI file
+  const [selectedPreloadedMidi, setSelectedPreloadedMidi] = useState<{
+    folder: string;
+    filename: string;
+  } | null>(null);
+
   // Handler to select a preloaded MIDI file
   const handleSelectPreloadedMidi = async (
     folder: string,
     filename: string
   ) => {
+    stopAllPlayback(); // Stop playback before loading new file
+    setUiPlayhead(0); // Reset playhead to beginning
+    dispatchPlayback({ type: "STOP" }); // Reset playback state to initial
     // Encode each path segment, not the slashes
     const url = `/midi/${folder
       .split("/")
@@ -491,6 +489,7 @@ function App() {
       const midi = new Midi(arrayBuffer);
       setParsedMidi(midi);
       setSelectedMidiIdx(null); // Not an uploaded file
+      setSelectedPreloadedMidi({ folder, filename });
     } catch (err) {
       console.error("Failed to load MIDI file:", url, err);
     }
@@ -1105,15 +1104,47 @@ function App() {
   // --- Drawer state ---
   const [drawerOpen, setDrawerOpen] = useState(true);
   const [drawerWidth] = useState(320); // Remove setDrawerWidth if not used
-  const minDrawerWidth = 200;
+  const minDrawerWidth = 300;
   const maxDrawerWidth = 600;
   const isResizingDrawer = useRef(false);
+
+  // Collapsible state for Uploaded Files
+  const [expandedUploaded, setExpandedUploaded] = useState(true);
+  const handleToggleUploaded = () => setExpandedUploaded((prev) => !prev);
 
   // Handler for real-time tempo changes
   const handleTempoChange = (newTempo: number) => {
     setTempo(newTempo);
-    if (playback.isPlaying) {
+    if (playback.isPlaying && parsedMidi) {
+      // Calculate normalized playhead position (0-1) based on old tempo
+      const midiTempo = getMidiTempo();
+      const oldTempoRatio = tempo / midiTempo;
+      const oldDuration = parsedMidi.duration / oldTempoRatio;
+      // Use Tone.Transport.seconds for current position
+      let currentSeconds = 0;
+      try {
+        currentSeconds = Tone.Transport.seconds;
+      } catch {
+        currentSeconds = playback.playhead * oldDuration;
+      }
+      // Calculate normalized playhead (0-1)
+      const playheadNorm = Math.min(currentSeconds / oldDuration, 1);
+      // Set new tempo
       Tone.Transport.bpm.value = newTempo;
+      // Calculate new duration and new absolute time
+      const newTempoRatio = newTempo / midiTempo;
+      const newDuration = parsedMidi.duration / newTempoRatio;
+      const newSeconds = playheadNorm * newDuration;
+      // Set Tone.Transport.seconds to new absolute time
+      try {
+        Tone.Transport.seconds = newSeconds;
+      } catch {
+        /* ignore */
+      }
+      // Update playhead state/UI
+      dispatchPlayback({ type: "SET_PLAYHEAD", playhead: playheadNorm });
+      setUiPlayhead(playheadNorm);
+      // Update playbackState.tempoRatio if present
       const playheadRefWithState = playheadRef as PlayheadRefWithAnimation;
       if (
         playheadRefWithState.playbackState &&
@@ -1121,24 +1152,20 @@ function App() {
       ) {
         playheadRefWithState.playbackState.tempoRatio =
           newTempo / playheadRefWithState.playbackState.originalTempo;
+        playheadRefWithState.playbackState.duration = newDuration;
       }
     }
   };
 
   // --- Controls Upper: Add MIDI file's default tempo ---
-  console.log(parsedMidi);
-
-  const midiDefaultTempo =
-    parsedMidi && parsedMidi.header && parsedMidi.header.tempos
-      ? Math.round(parsedMidi.header.tempos[0].bpm)
-      : 120;
+  const midiDefaultTempo = getMidiTempo();
 
   // --- Controls Upper: Add playhead position display ---
   // Helper to get playhead position as measure.beat.subdivision
   function getPlayheadPositionLabel(playheadNorm: number) {
     if (!parsedMidi) return "-";
     const ts = getTimeSignature();
-    const midiTempo = parsedMidi.header.tempos[0]?.bpm || 120;
+    const midiTempo = getMidiTempo();
     const tempoRatio = tempo / midiTempo;
     const duration = parsedMidi.duration / tempoRatio;
     const beatsPerBar = ts.numerator;
@@ -1155,6 +1182,39 @@ function App() {
     const subdivisionCount = subdivision;
     const subdivisionInBeat = Math.floor(beatFraction * subdivisionCount) + 1;
     return `${measure}.${beatInMeasure}.${subdivisionInBeat}`;
+  }
+
+  // Helper to get time signature (with fallback)
+  function getTimeSignature() {
+    if (
+      parsedMidi &&
+      parsedMidi.header &&
+      Array.isArray(parsedMidi.header.timeSignatures) &&
+      parsedMidi.header.timeSignatures.length > 0
+    ) {
+      const ts = parsedMidi.header.timeSignatures[0];
+      if (Array.isArray(ts.timeSignature) && ts.timeSignature.length === 2) {
+        return {
+          numerator: ts.timeSignature[0],
+          denominator: ts.timeSignature[1],
+        };
+      }
+    }
+    return { numerator: 4, denominator: 4 }; // default 4/4
+  }
+
+  // Helper to get MIDI tempo (with fallback)
+  function getMidiTempo() {
+    if (
+      parsedMidi &&
+      parsedMidi.header &&
+      Array.isArray(parsedMidi.header.tempos) &&
+      parsedMidi.header.tempos.length > 0 &&
+      typeof parsedMidi.header.tempos[0].bpm === "number"
+    ) {
+      return parsedMidi.header.tempos[0].bpm;
+    }
+    return 120; // default tempo
   }
 
   return (
@@ -1180,7 +1240,12 @@ function App() {
         {drawerOpen && (
           <div className="drawer-content">
             <h2 className="drawer-title">MIDI Files</h2>
+            {/* File input with custom label */}
+            <label htmlFor="drawer-file-input" className="drawer-file-input-label">
+              Upload MIDI Files
+            </label>
             <input
+              id="drawer-file-input"
               type="file"
               accept=".mid,.midi"
               multiple
@@ -1190,21 +1255,29 @@ function App() {
             {/* Uploaded Files Section */}
             {midiFiles.length > 0 && (
               <div className="drawer-uploaded-section">
-                <div className="drawer-folder-label">Uploaded Files</div>
-                <ul className="drawer-file-ul">
-                  {midiFiles.map((file, idx) => (
-                    <li key={idx} className="drawer-file-li">
-                      <button
-                        onClick={() => handleSelectMidi(idx)}
-                        className={`drawer-file-btn${
-                          idx === selectedMidiIdx ? " selected" : ""
-                        }`}
-                      >
-                        {file.name}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
+                <div
+                  className="drawer-folder-label"
+                  onClick={handleToggleUploaded}
+                  style={{ cursor: "pointer", fontWeight: 600 }}
+                >
+                  {expandedUploaded ? "▼" : "▶"} Uploaded Files
+                </div>
+                {expandedUploaded && (
+                  <ul className="drawer-file-ul">
+                    {midiFiles.map((file, idx) => (
+                      <li key={idx} className="drawer-file-li">
+                        <button
+                          onClick={() => handleSelectMidi(idx)}
+                          className={`drawer-file-btn${
+                            idx === selectedMidiIdx ? " selected" : ""
+                          }`}
+                        >
+                          {file.name}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
             )}
             {/* Preloaded MIDI Folder Tree */}
@@ -1226,7 +1299,13 @@ function App() {
                             onClick={() =>
                               handleSelectPreloadedMidi(folder, filename)
                             }
-                            className="drawer-file-btn"
+                            className={`drawer-file-btn${
+                              selectedPreloadedMidi &&
+                              selectedPreloadedMidi.folder === folder &&
+                              selectedPreloadedMidi.filename === filename
+                                ? " selected"
+                                : ""
+                            }`}
                           >
                             {filename}
                           </button>
@@ -1263,7 +1342,7 @@ function App() {
             Time Signature: {ts.numerator}/{ts.denominator}
           </span>
           <span className="controls-upper__label">
-            Default Tempo: {midiDefaultTempo} BPM
+            Default Tempo: {Math.round(midiDefaultTempo)} BPM
           </span>
           <span className="controls-upper__label">
             Position: {getPlayheadPositionLabel(uiPlayhead)}
@@ -1284,7 +1363,7 @@ function App() {
         <section className="timeline-section">{renderTimeline()}</section>
         <div className="controls-lower">
           <label htmlFor="tempo-slider" className="controls-lower__label">
-            Tempo: <b>{tempo} BPM</b>
+            Tempo: <b>{Math.round(tempo)} BPM</b>
           </label>
           <input
             id="tempo-slider"
