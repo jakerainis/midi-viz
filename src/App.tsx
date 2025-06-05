@@ -1003,8 +1003,6 @@ function App() {
                         className="drum-hit"
                         style={{
                           left: `${(noteObj.time / maxTime) * 100}%`,
-                          height: rowHeight - 16,
-                          width: 16,
                         }}
                       />
                     ))}
