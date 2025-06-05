@@ -284,9 +284,14 @@ function App() {
     dispatchPlayback({ type: "SET_PLAYHEAD", playhead: position });
     setUiPlayhead(position); // Update UI playhead
     if (position >= 0.999) {
-      console.log("Animation reached end of track, triggering stop");
-      handleStopRef.current();
-      return;
+      if (loopEnabled) {
+        // Restart playback from beginning
+        handlePlay(0);
+        return;
+      } else {
+        handleStopRef.current();
+        return;
+      }
     }
     // Only reschedule if not stopped
     if (stoppedRef.current) {
@@ -1217,6 +1222,10 @@ function App() {
     return 120; // default tempo
   }
 
+  // --- Loop state ---
+  const [loopEnabled, setLoopEnabled] = useState(false);
+  const handleToggleLoop = () => setLoopEnabled((prev) => !prev);
+
   return (
     <div className="app-root">
       {/* --- Persistent Drawer Toggle Button --- */}
@@ -1409,6 +1418,16 @@ function App() {
             }`}
           >
             Stop
+          </button>
+          <button
+            onClick={handleToggleLoop}
+            className={`controls-lower__button${
+              loopEnabled ? " controls-lower__button--active" : ""
+            }`}
+            title="Toggle timeline loop"
+            style={{ fontWeight: loopEnabled ? 700 : 400 }}
+          >
+            {loopEnabled ? "⟲ Loop On" : "⟲ Loop Off"}
           </button>
         </div>
       </div>

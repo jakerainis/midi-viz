@@ -290,6 +290,13 @@
   cursor: not-allowed;
 }
 
+.controls-lower__button--active {
+  background-color: #43a047;
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 2px 8px #43a04755;
+}
+
 #root {
   margin: 0 auto;
   text-align: center;
