@@ -1054,6 +1054,8 @@ function App() {
     }
   }, [parsedMidi]);
 
+  // --- Controls Upper: Combine time signature and subdivision, rename class ---
+  const ts = getTimeSignature();
   // --- Controls Bar below timeline and info box ---
   // (ControlsBar definition removed)
   // --- Drawer state ---
@@ -1078,6 +1080,12 @@ function App() {
       }
     }
   };
+
+  // --- Controls Upper: Add MIDI file's default tempo ---
+  const midiDefaultTempo =
+    parsedMidi && parsedMidi.header && parsedMidi.header.tempos
+      ? Math.round(parsedMidi.header.tempos[0].bpm)
+      : 120;
 
   return (
     <div className="app-root">
@@ -1147,22 +1155,28 @@ function App() {
         <div className="main-content-inner">
           <section className="timeline-section">
             {/* Timeline and grid subdivision select */}
-            <div className="timeline-subdivision-bar">
-              <label
-                htmlFor="subdivision-select"
-                className="timeline-subdivision-label"
-              >
-                Grid Subdivision:
-              </label>
+            <div className="controls-upper">
+              <span className="controls-upper__label">
+                File:{" "}
+                {selectedMidiIdx !== null && midiFiles[selectedMidiIdx]
+                  ? midiFiles[selectedMidiIdx].name
+                  : "No MIDI file selected"}
+              </span>
+              <span className="controls-upper__label">
+                Time Signature: {ts.numerator}/{ts.denominator}
+              </span>
+              <span className="controls-upper__label">
+                Default Tempo: {midiDefaultTempo} BPM
+              </span>
+              <span className="controls-upper__label">Subdivision:</span>
               <select
-                id="subdivision-select"
+                className="controls-upper__select"
                 value={subdivision}
                 onChange={(e) => setSubdivision(Number(e.target.value))}
-                className="timeline-subdivision-select"
               >
-                {subdivisionOptions.map((opt) => (
-                  <option key={opt} value={opt}>
-                    1/{opt}
+                {subdivisionOptions.map((option) => (
+                  <option key={option} value={option}>
+                    1/{option}
                   </option>
                 ))}
               </select>
@@ -1170,98 +1184,57 @@ function App() {
             {/* Full-width timeline container */}
             <div className="timeline-container">{renderTimeline()}</div>
           </section>
-          {/* MIDI Info Box */}
-          {parsedMidi && (
-            <div className="midi-info-box">
-              {/* Number of notes */}
-              <div>
-                <span className="midi-info-label">Notes:</span>{" "}
-                {parsedMidi.tracks.reduce((acc, t) => acc + t.notes.length, 0)}
-              </div>
-              {/* Note range */}
-              <div>
-                <span className="midi-info-label">Note Range:</span>{" "}
-                {(() => {
-                  const allNotes = parsedMidi.tracks.flatMap((t) =>
-                    t.notes.map((n) => n.midi)
-                  );
-                  if (allNotes.length === 0) return "N/A";
-                  const min = Math.min(...allNotes);
-                  const max = Math.max(...allNotes);
-                  return `${min} - ${max}`;
-                })()}
-              </div>
-              {/* Time signature */}
-              <div>
-                <span className="midi-info-label">Time Signature:</span>{" "}
-                {(() => {
-                  const ts = getTimeSignature();
-                  return ts.numerator && ts.denominator
-                    ? `${ts.numerator}/${ts.denominator}`
-                    : "4/4 (default)";
-                })()}
-              </div>
-              {/* BPM */}
-              <div>
-                <span className="midi-info-label">BPM:</span>{" "}
-                {parsedMidi.header.tempos.length > 0
-                  ? Math.round(parsedMidi.header.tempos[0].bpm)
-                  : "N/A"}
-              </div>
-            </div>
-          )}
           {/* --- Controls Bar below timeline and info box --- */}
-          <div className="controls-bar-fixed controls-bar">
-            <div className="controls-bar">
-              <label htmlFor="tempo-slider" className="controls-bar__label">
-                Tempo: <b>{tempo} BPM</b>
-              </label>
-              <input
-                id="tempo-slider"
-                type="range"
-                min={30}
-                max={300}
-                value={tempo}
-                onChange={(e) => handleTempoChange(Number(e.target.value))}
-                className="controls-bar__slider"
-              />
-              <button
-                onClick={() => {
-                  if (playback.isPlaying) {
-                    handlePause();
-                  } else if (playback.isPaused) {
-                    handleResume();
-                  } else {
-                    handlePlay();
-                  }
-                }}
-                disabled={!parsedMidi}
-                className={`controls-bar__button controls-bar__button--play ${
-                  playback.isPaused
-                    ? "controls-bar__button--resume"
-                    : playback.isPlaying
-                    ? "controls-bar__button--pause"
-                    : "controls-bar__button--play-active"
-                }`}
-              >
-                {playback.isPaused
-                  ? "Resume"
+
+          <div className="controls-lower">
+            <label htmlFor="tempo-slider" className="controls-lower__label">
+              Tempo: <b>{tempo} BPM</b>
+            </label>
+            <input
+              id="tempo-slider"
+              type="range"
+              min={30}
+              max={300}
+              value={tempo}
+              onChange={(e) => handleTempoChange(Number(e.target.value))}
+              className="controls-lower__slider"
+            />
+            <button
+              onClick={() => {
+                if (playback.isPlaying) {
+                  handlePause();
+                } else if (playback.isPaused) {
+                  handleResume();
+                } else {
+                  handlePlay();
+                }
+              }}
+              disabled={!parsedMidi}
+              className={`controls-lower__button controls-lower__button--play ${
+                playback.isPaused
+                  ? "controls-lower__button--resume"
                   : playback.isPlaying
-                  ? "Pause"
-                  : "Play"}
-              </button>
-              <button
-                onClick={handleStop}
-                disabled={!playback.isPlaying && !playback.isPaused}
-                className={`controls-bar__button controls-bar__button--stop${
-                  !playback.isPlaying && !playback.isPaused
-                    ? " controls-bar__button--disabled"
-                    : ""
-                }`}
-              >
-                Stop
-              </button>
-            </div>
+                  ? "controls-lower__button--pause"
+                  : "controls-lower__button--play-active"
+              }`}
+            >
+              {playback.isPaused
+                ? "Resume"
+                : playback.isPlaying
+                ? "Pause"
+                : "Play"}
+            </button>
+            <button
+              onClick={handleStop}
+              disabled={!playback.isPlaying && !playback.isPaused}
+              className={`controls-lower__button controls-lower__button--stop${
+                !playback.isPlaying && !playback.isPaused
+                  ? " controls-lower__button--disabled"
+                  : ""
+              }`}
+            >
+              Stop
+            </button>
           </div>
         </div>
       </div>

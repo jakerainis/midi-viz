@@ -130,12 +130,8 @@
   min-height: 0;
 }
 
-/* Timeline Section */
-.timeline-section {
-  margin-left: 0;
-  margin-top: 12px;
-}
-.timeline-subdivision-bar {
+/* Controls Upper (formerly timeline-subdivision-bar) */
+.controls-upper {
   margin-bottom: 8px;
   text-align: left;
   max-width: 1220px;
@@ -143,19 +139,16 @@
   padding-left: 32px;
   display: flex;
   align-items: center;
+  gap: 18px;
 }
-.timeline-subdivision-label {
+.controls-upper__label {
   font-weight: 500;
   margin-right: 8px;
+  font-size: 16px;
 }
-.timeline-subdivision-select {
+.controls-upper__select {
   font-size: 15px;
   padding: 2px 8px;
-}
-.timeline-container {
-  width: 100%;
-  padding: 0;
-  margin: 0;
 }
 
 /* MIDI Info Box */
@@ -179,35 +172,30 @@
 }
 
 /* Controls Bar */
-.controls-bar {
-  position: fixed;
+.controls-lower {
   left: 0;
   right: 0;
   bottom: 0;
-  background: #222;
-  color: #fff;
-  border-top: 2px solid #1976d2;
   z-index: 100;
   padding: 1.2em 0 1.2em 0;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 32px;
-  box-shadow: 0 -2px 16px #0002;
 }
 
-.controls-bar__label {
+.controls-lower__label {
   font-size: 18px;
   margin-right: 8px;
 }
 
-.controls-bar__slider {
+.controls-lower__slider {
   width: 300px;
   margin: 0 1em;
   vertical-align: middle;
 }
 
-.controls-bar__button {
+.controls-lower__button {
   font-size: 18px;
   padding: 0.5em 2em;
   border-radius: 4px;
@@ -217,23 +205,23 @@
   transition: background-color 0.2s ease, opacity 0.2s ease;
 }
 
-.controls-bar__button--play-active {
+.controls-lower__button--play-active {
   background-color: #2196f3;
 }
 
-.controls-bar__button--pause {
+.controls-lower__button--pause {
   background-color: #e67700;
 }
 
-.controls-bar__button--resume {
+.controls-lower__button--resume {
   background-color: #e6a700;
 }
 
-.controls-bar__button--stop {
+.controls-lower__button--stop {
   background-color: #d32f2f;
 }
 
-.controls-bar__button--disabled {
+.controls-lower__button--disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
