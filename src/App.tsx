@@ -352,17 +352,20 @@ function App() {
     return { leftGutter, timelineWidth };
   };
 
+  // --- Playhead width constant ---
+  const PLAYHEAD_WIDTH = 11; // px, must match .timeline-playhead CSS
+
   // --- Helper: Convert pointer X to normalized playhead position (0–1) ---
+  // Use actual DOM width and left offset for precise playhead drag
   const getPlayheadFromPointer = (clientX: number) => {
-    const { timelineWidth } = getTimelineMetrics();
     let timelineLeft = 0;
+    let timelineWidth = 1;
     if (timelineRef.current) {
       const rect = timelineRef.current.getBoundingClientRect();
       timelineLeft = rect.left;
+      timelineWidth = rect.width;
     }
-    // No borderOffset subtraction!
     const x = clientX - timelineLeft;
-    // Clamp and normalize
     const norm = Math.max(0, Math.min(1, x / timelineWidth));
     return norm;
   };
@@ -505,8 +508,6 @@ function App() {
       playheadRef.current = null;
     }
   };
-
-  // (Duplicate handlePause removed to fix redeclaration error)
 
   // --- Resume from paused state - robustly sync playhead and Tone.Transport ---
   const handleResume = async () => {
@@ -937,6 +938,7 @@ function App() {
               setIsDraggingPlayhead(true);
               const playhead = getPlayheadFromPointer(e.clientX);
               dragPlayheadXRef.current = playhead;
+              setUiPlayhead(playhead);
               document.body.style.userSelect = "none";
               window.addEventListener(
                 "pointermove",
@@ -965,7 +967,7 @@ function App() {
             <div
               className="timeline-playhead"
               style={{
-                left: `${playheadNorm * 100}%`,
+                left: `calc(${playheadNorm * 100}% - ${PLAYHEAD_WIDTH / 2}px)`,
                 opacity: isDraggingPlayhead ? 0.5 : 0.8,
               }}
               onPointerDown={(e) => {
@@ -1176,93 +1178,85 @@ function App() {
       </div>
       {/* --- Main Content --- */}
       <div className="main-content">
-        <div className="main-content-inner">
-          <section className="timeline-section">
-            {/* Timeline and grid subdivision select */}
-            <div className="controls-upper">
-              <span className="controls-upper__label">
-                File:{" "}
-                {selectedMidiIdx !== null && midiFiles[selectedMidiIdx]
-                  ? midiFiles[selectedMidiIdx].name
-                  : "No MIDI file selected"}
-              </span>
-              <span className="controls-upper__label">
-                Time Signature: {ts.numerator}/{ts.denominator}
-              </span>
-              <span className="controls-upper__label">
-                Default Tempo: {midiDefaultTempo} BPM
-              </span>
-              <span className="controls-upper__label">
-                Position: {getPlayheadPositionLabel(uiPlayhead)}
-              </span>
-              <span className="controls-upper__label">Subdivision:</span>
-              <select
-                className="controls-upper__select"
-                value={subdivision}
-                onChange={(e) => setSubdivision(Number(e.target.value))}
-              >
-                {subdivisionOptions.map((option) => (
-                  <option key={option} value={option}>
-                    1/{option}
-                  </option>
-                ))}
-              </select>
-            </div>
-            {/* Full-width timeline container */}
-            <div className="timeline-container">{renderTimeline()}</div>
-          </section>
-          {/* --- Controls Bar below timeline and info box --- */}
-
-          <div className="controls-lower">
-            <label htmlFor="tempo-slider" className="controls-lower__label">
-              Tempo: <b>{tempo} BPM</b>
-            </label>
-            <input
-              id="tempo-slider"
-              type="range"
-              min={30}
-              max={300}
-              value={tempo}
-              onChange={(e) => handleTempoChange(Number(e.target.value))}
-              className="controls-lower__slider"
-            />
-            <button
-              onClick={() => {
-                if (playback.isPlaying) {
-                  handlePause();
-                } else if (playback.isPaused) {
-                  handleResume();
-                } else {
-                  handlePlay();
-                }
-              }}
-              disabled={!parsedMidi}
-              className={`controls-lower__button controls-lower__button--play ${
-                playback.isPaused
-                  ? "controls-lower__button--resume"
-                  : playback.isPlaying
-                  ? "controls-lower__button--pause"
-                  : "controls-lower__button--play-active"
-              }`}
-            >
-              {playback.isPaused
-                ? "Resume"
+        <div className="controls-upper">
+          <span className="controls-upper__label">
+            File:{" "}
+            {selectedMidiIdx !== null && midiFiles[selectedMidiIdx]
+              ? midiFiles[selectedMidiIdx].name
+              : "No MIDI file selected"}
+          </span>
+          <span className="controls-upper__label">
+            Time Signature: {ts.numerator}/{ts.denominator}
+          </span>
+          <span className="controls-upper__label">
+            Default Tempo: {midiDefaultTempo} BPM
+          </span>
+          <span className="controls-upper__label">
+            Position: {getPlayheadPositionLabel(uiPlayhead)}
+          </span>
+          <span className="controls-upper__label">Subdivision:</span>
+          <select
+            className="controls-upper__select"
+            value={subdivision}
+            onChange={(e) => setSubdivision(Number(e.target.value))}
+          >
+            {subdivisionOptions.map((option) => (
+              <option key={option} value={option}>
+                1/{option}
+              </option>
+            ))}
+          </select>
+        </div>
+        <section className="timeline-section">{renderTimeline()}</section>
+        <div className="controls-lower">
+          <label htmlFor="tempo-slider" className="controls-lower__label">
+            Tempo: <b>{tempo} BPM</b>
+          </label>
+          <input
+            id="tempo-slider"
+            type="range"
+            min={30}
+            max={300}
+            value={tempo}
+            onChange={(e) => handleTempoChange(Number(e.target.value))}
+            className="controls-lower__slider"
+          />
+          <button
+            onClick={() => {
+              if (playback.isPlaying) {
+                handlePause();
+              } else if (playback.isPaused) {
+                handleResume();
+              } else {
+                handlePlay();
+              }
+            }}
+            disabled={!parsedMidi}
+            className={`controls-lower__button controls-lower__button--play ${
+              playback.isPaused
+                ? "controls-lower__button--resume"
                 : playback.isPlaying
-                ? "Pause"
-                : "Play"}
-            </button>
-            <button
-              onClick={handleStop}
-              disabled={!playback.isPlaying && !playback.isPaused}
-              className={`controls-lower__button controls-lower__button--stop${
-                !playback.isPlaying && !playback.isPaused
-                  ? " controls-lower__button--disabled"
-                  : ""
-              }`}
-            >
-              Stop
-            </button>
-          </div>
+                ? "controls-lower__button--pause"
+                : "controls-lower__button--play-active"
+            }`}
+          >
+            {playback.isPaused
+              ? "Resume"
+              : playback.isPlaying
+              ? "Pause"
+              : "Play"}
+          </button>
+          <button
+            onClick={handleStop}
+            disabled={!playback.isPlaying && !playback.isPaused}
+            className={`controls-lower__button controls-lower__button--stop${
+              !playback.isPlaying && !playback.isPaused
+                ? " controls-lower__button--disabled"
+                : ""
+            }`}
+          >
+            Stop
+          </button>
         </div>
       </div>
     </div>
