@@ -1250,7 +1250,10 @@ function App() {
           <div className="drawer-content">
             <h2 className="drawer-title">MIDI Files</h2>
             {/* File input with custom label */}
-            <label htmlFor="drawer-file-input" className="drawer-file-input-label">
+            <label
+              htmlFor="drawer-file-input"
+              className="drawer-file-input-label"
+            >
               Upload MIDI Files
             </label>
             <input
