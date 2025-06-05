@@ -1087,6 +1087,30 @@ function App() {
       ? Math.round(parsedMidi.header.tempos[0].bpm)
       : 120;
 
+  // --- Controls Upper: Add playhead position display ---
+  // Helper to get playhead position as measure.beat.subdivision
+  function getPlayheadPositionLabel(playheadNorm: number) {
+    if (!parsedMidi) return "-";
+    const ts = getTimeSignature();
+    const midiTempo = parsedMidi.header.tempos[0]?.bpm || 120;
+    const tempoRatio = tempo / midiTempo;
+    const duration = parsedMidi.duration / tempoRatio;
+    const beatsPerBar = ts.numerator;
+    // Current time in seconds
+    const currentTime = playheadNorm * duration;
+    // Current beat (float)
+    const currentBeat = currentTime / (60 / midiTempo);
+    // Measure (1-based)
+    const measure = Math.floor(currentBeat / beatsPerBar) + 1;
+    // Beat within measure (1-based)
+    const beatInMeasure = Math.floor(currentBeat % beatsPerBar) + 1;
+    // Subdivision within beat (1-based)
+    const beatFraction = currentBeat % 1;
+    const subdivisionCount = subdivision;
+    const subdivisionInBeat = Math.floor(beatFraction * subdivisionCount) + 1;
+    return `${measure}.${beatInMeasure}.${subdivisionInBeat}`;
+  }
+
   return (
     <div className="app-root">
       {/* --- Persistent Drawer Toggle Button --- */}
@@ -1167,6 +1191,9 @@ function App() {
               </span>
               <span className="controls-upper__label">
                 Default Tempo: {midiDefaultTempo} BPM
+              </span>
+              <span className="controls-upper__label">
+                Position: {getPlayheadPositionLabel(uiPlayhead)}
               </span>
               <span className="controls-upper__label">Subdivision:</span>
               <select
