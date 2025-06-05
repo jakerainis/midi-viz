@@ -452,6 +452,50 @@ function App() {
     setParsedMidi(midi);
   };
 
+  // --- New: MIDI manifest and folder tree state ---
+  interface MidiFolderTree {
+    [folder: string]: string[];
+  }
+
+  const [midiManifest, setMidiManifest] = useState<MidiFolderTree>({});
+  const [expandedFolders, setExpandedFolders] = useState<
+    Record<string, boolean>
+  >({});
+
+  // Fetch manifest.json from /public/midi/manifest.json on mount
+  useEffect(() => {
+    fetch("/midi/manifest.json")
+      .then((res) => res.json())
+      .then((manifest) => setMidiManifest(manifest))
+      .catch((err) => console.error("Failed to load MIDI manifest:", err));
+  }, []);
+
+  // Handler to expand/collapse folders
+  const handleToggleFolder = (folder: string) => {
+    setExpandedFolders((prev) => ({ ...prev, [folder]: !prev[folder] }));
+  };
+
+  // Handler to select a preloaded MIDI file
+  const handleSelectPreloadedMidi = async (
+    folder: string,
+    filename: string
+  ) => {
+    // Encode each path segment, not the slashes
+    const url = `/midi/${folder
+      .split("/")
+      .map(encodeURIComponent)
+      .join("/")}/${encodeURIComponent(filename)}`;
+    try {
+      const res = await fetch(url);
+      const arrayBuffer = await res.arrayBuffer();
+      const midi = new Midi(arrayBuffer);
+      setParsedMidi(midi);
+      setSelectedMidiIdx(null); // Not an uploaded file
+    } catch (err) {
+      console.error("Failed to load MIDI file:", url, err);
+    }
+  };
+
   // Cleanup playback resources without resetting playhead or UI state
   const cleanupPlayback = () => {
     // Cancel animation frame
@@ -1082,6 +1126,8 @@ function App() {
   };
 
   // --- Controls Upper: Add MIDI file's default tempo ---
+  console.log(parsedMidi);
+
   const midiDefaultTempo =
     parsedMidi && parsedMidi.header && parsedMidi.header.tempos
       ? Math.round(parsedMidi.header.tempos[0].bpm)
@@ -1141,8 +1187,10 @@ function App() {
               onChange={handleMidiUpload}
               className="drawer-file-input"
             />
-            <div className="drawer-file-list">
-              {midiFiles.length > 0 ? (
+            {/* Uploaded Files Section */}
+            {midiFiles.length > 0 && (
+              <div className="drawer-uploaded-section">
+                <div className="drawer-folder-label">Uploaded Files</div>
                 <ul className="drawer-file-ul">
                   {midiFiles.map((file, idx) => (
                     <li key={idx} className="drawer-file-li">
@@ -1157,9 +1205,37 @@ function App() {
                     </li>
                   ))}
                 </ul>
-              ) : (
-                <div className="drawer-empty">No MIDI files loaded.</div>
-              )}
+              </div>
+            )}
+            {/* Preloaded MIDI Folder Tree */}
+            <div className="drawer-folder-tree">
+              {Object.entries(midiManifest).map(([folder, files]) => (
+                <div key={folder} className="drawer-folder">
+                  <div
+                    className="drawer-folder-label"
+                    onClick={() => handleToggleFolder(folder)}
+                    style={{ cursor: "pointer", fontWeight: 600 }}
+                  >
+                    {expandedFolders[folder] ? "▼" : "▶"} {folder}
+                  </div>
+                  {expandedFolders[folder] && (
+                    <ul className="drawer-file-ul">
+                      {files.map((filename) => (
+                        <li key={filename} className="drawer-file-li">
+                          <button
+                            onClick={() =>
+                              handleSelectPreloadedMidi(folder, filename)
+                            }
+                            className="drawer-file-btn"
+                          >
+                            {filename}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         )}

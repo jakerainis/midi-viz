@@ -47,28 +47,51 @@
   flex: 1;
   overflow-y: auto;
 }
+.drawer-folder-tree {
+  margin-top: 18px;
+  font-size: 15px;
+}
+.drawer-folder {
+  margin-bottom: 8px;
+}
+.drawer-folder-label {
+  padding: 6px 0 6px 4px;
+  font-weight: 600;
+  color: #fff;
+  background: #1976d2;
+  border-radius: 4px;
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.15s;
+}
+.drawer-folder-label:hover {
+  background: #125ea2;
+}
 .drawer-file-ul {
   list-style: none;
-  padding: 0;
+  padding-left: 18px;
   margin: 0;
 }
 .drawer-file-li {
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 .drawer-file-btn {
-  width: 100%;
-  text-align: left;
   background: #333;
   color: #eee;
   border: none;
   border-radius: 4px;
-  padding: 8px 10px;
-  font-weight: 400;
+  padding: 6px 10px;
   font-size: 15px;
   cursor: pointer;
+  width: 100%;
+  text-align: left;
   transition: background 0.15s, color 0.15s;
 }
-.drawer-file-btn.selected {
+.drawer-file-btn.selected,
+.drawer-file-btn:focus {
   background: #1976d2;
   color: #fff;
   font-weight: 700;
