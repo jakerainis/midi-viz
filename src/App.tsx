@@ -1405,22 +1405,18 @@ function App() {
                 : "controls-lower__button--play-active"
             }`}
           >
-            {playback.isPaused
-              ? "Resume"
-              : playback.isPlaying
-              ? "Pause"
-              : "Play"}
+            <span className="icon">⏯</span>
           </button>
           <button
             onClick={handleStop}
             disabled={!playback.isPlaying && !playback.isPaused}
-            className={`controls-lower__button controls-lower__button--stop${
+            className={`controls-lower__button controls-lower__button--stop$ {
               !playback.isPlaying && !playback.isPaused
                 ? " controls-lower__button--disabled"
                 : ""
             }`}
           >
-            Stop
+            <span className="icon">⏹</span>
           </button>
           <button
             onClick={handleToggleLoop}
@@ -1430,7 +1426,7 @@ function App() {
             title="Toggle timeline loop"
             style={{ fontWeight: loopEnabled ? 700 : 400 }}
           >
-            {loopEnabled ? "⟲ Loop On" : "⟲ Loop Off"}
+            <span className="icon">⟲</span>
           </button>
         </div>
       </div>
