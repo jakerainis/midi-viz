@@ -2,7 +2,6 @@ import { useState, useRef, useEffect, useReducer } from "react";
 import { Midi } from "@tonejs/midi";
 import * as Tone from "tone";
 import "./App.css";
-import EnhancedControls from "./EnhancedControlsFixed";
 
 // General MIDI drum note mapping (full, 35–81)
 const DRUM_MAP: Record<number, string> = {
@@ -237,10 +236,10 @@ function App() {
   const [selectedMidiIdx, setSelectedMidiIdx] = useState<number | null>(null);
   const playheadRef = useRef<number | null>(null);
   const playersRef = useRef<Record<number, Tone.Player>>({});
-  // Store scheduled transport event IDs for cleanup
   const noteTimeoutsRef = useRef<number[]>([]);
-  // For debouncing UI interactions
-  // const lastButtonClickRef = useRef<number>(0); // Removed, unused
+
+  // Add a stoppedRef to robustly control animation frame scheduling
+  const stoppedRef = useRef(true); // true = not animating, false = should stop
 
   // Replace isPlaying, isPaused, playhead, pausedPositionRef with reducer
   const [playback, dispatchPlayback] = useReducer(
@@ -257,6 +256,82 @@ function App() {
     isPlayingRef.current = playback.isPlaying;
   }, [playback.isPlaying]);
 
+  // --- NEW: stoppedRef to robustly control animation frame scheduling ---
+
+  // Ref for latest handleStop (declare before handleStop is defined)
+  const handleStopRef = useRef<() => void>(() => {});
+  useEffect(() => {
+    handleStopRef.current = handleStop;
+  });
+
+  // --- Animation frame playhead updater (top-level, always latest refs) ---
+  const updatePlayhead = (
+    parsedMidi: Midi,
+    tempoRatio: number,
+    duration: number,
+    playheadRefWithAnimation: PlayheadRefWithAnimation
+  ) => {
+    // --- CRITICAL: Check stoppedRef before doing anything ---
+    if (!isPlayingRef.current || !stoppedRef.current) return;
+    // Use Transport position for accurate playhead tracking
+    const transportPosition = Tone.Transport.seconds;
+    const currentTempoRatio =
+      playheadRefWithAnimation.playbackState?.tempoRatio || tempoRatio;
+    const position = Math.min(
+      transportPosition / (parsedMidi.duration / currentTempoRatio),
+      1
+    );
+    dispatchPlayback({ type: "SET_PLAYHEAD", playhead: position });
+    setUiPlayhead(position); // Update UI playhead
+    if (position >= 0.999) {
+      console.log("Animation reached end of track, triggering stop");
+      handleStopRef.current();
+      return;
+    }
+    // Only reschedule if not stopped
+    if (stoppedRef.current) {
+      playheadRefWithAnimation.animationFrame = window.requestAnimationFrame(
+        () =>
+          updatePlayhead(
+            parsedMidi,
+            tempoRatio,
+            duration,
+            playheadRefWithAnimation
+          )
+      );
+    }
+  };
+
+  // --- Ensure stop/pause always halts animation and transport immediately ---
+  const stopAllPlayback = () => {
+    // --- CRITICAL: Set stoppedRef and isPlayingRef to false BEFORE anything else ---
+    stoppedRef.current = false;
+    isPlayingRef.current = false;
+    // Cancel animation frame
+    const playheadRefWithAnimation = playheadRef as PlayheadRefWithAnimation;
+    if (playheadRefWithAnimation.animationFrame) {
+      try {
+        window.cancelAnimationFrame(playheadRefWithAnimation.animationFrame);
+        playheadRefWithAnimation.animationFrame = undefined;
+      } catch (err) {
+        console.warn("Error cancelling animation frame during stop:", err);
+      }
+    }
+    // Cancel scheduled events and stop transport
+    try {
+      Tone.Transport.cancel();
+      console.log("Transport events cancelled in stopAllPlayback");
+    } catch {
+      /* ignore */
+    }
+    try {
+      Tone.Transport.stop();
+      console.log("Transport stopped in stopAllPlayback");
+    } catch {
+      /* ignore */
+    }
+  };
+
   // Subdivision state for timeline grid
   const [subdivision, setSubdivision] = useState(8); // default to 1/8th notes
   const subdivisionOptions = [4, 8, 16, 32];
@@ -272,23 +347,21 @@ function App() {
 
   // Helper to get timeline dimensions
   const getTimelineMetrics = () => {
-    const width = 1000;
     const leftGutter = 220;
-    const timelineWidth = width - 20;
-    return { width, leftGutter, timelineWidth };
+    const timelineWidth = 1000 - 20;
+    return { leftGutter, timelineWidth };
   };
 
   // --- Helper: Convert pointer X to normalized playhead position (0–1) ---
   const getPlayheadFromPointer = (clientX: number) => {
-    const { leftGutter, timelineWidth } = getTimelineMetrics();
-    // Try to get the bounding rect of the timeline SVG
+    const { timelineWidth } = getTimelineMetrics();
     let timelineLeft = 0;
     if (timelineRef.current) {
       const rect = timelineRef.current.getBoundingClientRect();
       timelineLeft = rect.left;
     }
-    // Calculate X relative to the start of the timeline (after gutter)
-    const x = clientX - timelineLeft - leftGutter;
+    // No borderOffset subtraction!
+    const x = clientX - timelineLeft;
     // Clamp and normalize
     const norm = Math.max(0, Math.min(1, x / timelineWidth));
     return norm;
@@ -308,21 +381,24 @@ function App() {
     setIsDraggingPlayhead(false);
     const playhead = getPlayheadFromPointer(e.clientX);
     setUiPlayhead(playhead);
-    dispatchPlayback({ type: "SET_PLAYHEAD", playhead });
+    // --- CRITICAL: Always update both pausedPosition and pausedSeconds when dragging while paused ---
+    const midiTempo = parsedMidi.header.tempos[0]?.bpm || 120;
+    const tempoRatio = tempo / midiTempo;
+    const jumpSeconds = playhead * (parsedMidi.duration / tempoRatio);
     if (playback.isPlaying && parsedMidi) {
-      const midiTempo = parsedMidi.header.tempos[0]?.bpm || 120;
-      const tempoRatio = tempo / midiTempo;
-      const jumpSeconds = playhead * (parsedMidi.duration / tempoRatio);
       handlePlay(jumpSeconds);
     } else if (playback.isPaused && parsedMidi) {
-      const midiTempo = parsedMidi.header.tempos[0]?.bpm || 120;
-      const tempoRatio = tempo / midiTempo;
-      const jumpSeconds = playhead * (parsedMidi.duration / tempoRatio);
       dispatchPlayback({
         type: "PAUSE",
         position: playhead,
         seconds: jumpSeconds,
       });
+      // --- Also set Tone.Transport.seconds so resume/play always starts from here ---
+      try {
+        Tone.Transport.seconds = jumpSeconds;
+      } catch {
+        /* ignore */
+      }
     }
     dragPlayheadXRef.current = null;
     window.removeEventListener(
@@ -339,18 +415,12 @@ function App() {
   const getTimeSignature = () => {
     if (parsedMidi && parsedMidi.header.timeSignatures.length > 0) {
       const ts = parsedMidi.header.timeSignatures[0];
-      // Support both .numerator/.denominator and .timeSignature array
+      // Use .timeSignature array (e.g., [4,4])
       if (Array.isArray(ts.timeSignature) && ts.timeSignature.length === 2) {
         return {
           numerator: ts.timeSignature[0],
           denominator: ts.timeSignature[1],
         };
-      }
-      if (
-        typeof ts.numerator === "number" &&
-        typeof ts.denominator === "number"
-      ) {
-        return { numerator: ts.numerator, denominator: ts.denominator };
       }
     }
     return { numerator: 4, denominator: 4 }; // default 4/4
@@ -395,13 +465,13 @@ function App() {
     try {
       Tone.Transport.cancel();
     } catch {
-      /* intentionally ignored */
+      /* ignore */
     }
     // Stop transport
     try {
       Tone.Transport.stop();
     } catch {
-      /* intentionally ignored */
+      /* ignore */
     }
     // Remove all scheduled events from transport
     if (noteTimeoutsRef.current.length) {
@@ -409,7 +479,7 @@ function App() {
         try {
           Tone.Transport.clear(id);
         } catch {
-          /* intentionally ignored */
+          /* ignore */
         }
       });
       noteTimeoutsRef.current = [];
@@ -421,7 +491,7 @@ function App() {
         player.disconnect();
         player.dispose();
       } catch {
-        /* intentionally ignored */
+        /* ignore */
       }
     });
     playersRef.current = {};
@@ -436,30 +506,61 @@ function App() {
     }
   };
 
-  // Resume from paused state - completely rewritten with a restart approach
+  // (Duplicate handlePause removed to fix redeclaration error)
+
+  // --- Resume from paused state - robustly sync playhead and Tone.Transport ---
   const handleResume = async () => {
     if (!playback.isPaused || playback.pausedPosition === null) {
       console.warn("Cannot resume: not in paused state or no position saved");
       return;
     }
-
     // Use the absolute seconds value for resuming
     const resumeFrom = playback.pausedSeconds ?? 0;
-    console.log(`Resume position: ${resumeFrom}s`);
-
-    // Resume audio context if needed
+    setUiPlayhead(playback.pausedPosition ?? 0); // Keep playhead at paused position
     try {
       const audioContext = getNativeAudioContext(Tone.getContext().rawContext);
       if (audioContext && audioContext.state === "suspended") {
         await audioContext.resume();
-        console.log("Audio context resumed for playback");
       }
     } catch (err) {
       console.warn("Error resuming audio context:", err);
     }
-
-    // Only call handlePlay with resumeFrom, do not dispatch RESUME separately
-    await handlePlay(resumeFrom);
+    // --- CRITICAL: Set Tone.Transport.seconds to resumeFrom before starting ---
+    try {
+      Tone.Transport.seconds = resumeFrom;
+    } catch {
+      /* ignore */
+    }
+    // --- Start playhead animation frame on resume ---
+    const playheadRefWithAnimation = playheadRef as PlayheadRefWithAnimation;
+    if (playheadRefWithAnimation.animationFrame) {
+      window.cancelAnimationFrame(playheadRefWithAnimation.animationFrame);
+      playheadRefWithAnimation.animationFrame = undefined;
+    }
+    // --- Instead of calling handlePlay, directly start Tone.Transport and animation ---
+    try {
+      Tone.Transport.start();
+    } catch {
+      /* ignore */
+    }
+    // Start playhead animation frame
+    if (parsedMidi) {
+      const midiTempo = parsedMidi.header.tempos[0]?.bpm || 120;
+      const tempoRatio = tempo / midiTempo;
+      const duration = parsedMidi.duration / tempoRatio;
+      stoppedRef.current = true;
+      isPlayingRef.current = true;
+      playheadRefWithAnimation.animationFrame = window.requestAnimationFrame(
+        () =>
+          updatePlayhead(
+            parsedMidi,
+            tempoRatio,
+            duration,
+            playheadRefWithAnimation
+          )
+      );
+    }
+    dispatchPlayback({ type: "RESUME" });
   };
 
   // Playback logic
@@ -467,13 +568,13 @@ function App() {
   const handlePlay = async (startPosition: number | null = null) => {
     if (!parsedMidi) return;
     cleanupPlayback();
-    // If resuming, set playhead to correct position in PLAY action
+    stoppedRef.current = true;
+    isPlayingRef.current = true;
     const midiTempo = parsedMidi.header.tempos[0]?.bpm || 120;
     const tempoRatio = tempo / midiTempo;
     let playheadValue = 0;
     let actualStartPosition = startPosition;
     if (actualStartPosition === null && parsedMidi) {
-      // Always use the most up-to-date playhead position (drag or UI)
       const normPlayhead =
         isDraggingPlayhead && dragPlayheadXRef.current !== null
           ? dragPlayheadXRef.current
@@ -486,36 +587,28 @@ function App() {
         1
       );
     }
+    // --- CRITICAL: Always set Tone.Transport.seconds to match playhead before starting ---
+    try {
+      Tone.Transport.seconds = actualStartPosition ?? 0;
+    } catch {
+      /* ignore */
+    }
     dispatchPlayback({
       type: "PLAY",
       position: playheadValue,
       seconds: actualStartPosition,
     });
-    // Do not reset playhead to 0 here; only reset in handleStop
+    // --- NEW: Always set Tone.Transport.seconds and playhead together before starting ---
     try {
-      // Initialize audio context
       await Tone.start();
-
-      // Get the original tempo from the MIDI file (or use a default)
       const originalTempo =
         parsedMidi.header.tempos.length > 0
           ? parsedMidi.header.tempos[0].bpm
           : 120;
-
-      // Calculate tempo ratio for timing adjustments
-      const tempoRatio = tempo / originalTempo;
-
-      // Calculate accurate duration based on tempo
       const duration = parsedMidi.duration / tempoRatio;
-
-      // Start time reference point
       const startTime = Tone.now();
-
-      // Reset the transport
       Tone.Transport.cancel();
       Tone.Transport.stop();
-
-      // Set the playback tempo
       Tone.Transport.bpm.value = tempo;
 
       // Create a new players object
@@ -576,53 +669,7 @@ function App() {
       playheadRefWithAnimation.playbackState = playbackState;
 
       // Set up accurate playhead animation with requestAnimationFrame
-      let animationFrame: number;
-
-      const updatePlayhead = () => {
-        // Only update playhead if currently playing (use ref for latest value)
-        if (!isPlayingRef.current) return;
-        // Use Transport position for accurate playhead tracking
-        const transportPosition = Tone.Transport.seconds;
-
-        // Get the current tempoRatio from playbackState to ensure it's up-to-date
-        const currentTempoRatio =
-          playheadRefWithAnimation.playbackState?.tempoRatio || tempoRatio;
-
-        // Calculate position using the current tempo ratio
-        const position = Math.min(
-          transportPosition / (parsedMidi.duration / currentTempoRatio),
-          1
-        );
-
-        dispatchPlayback({ type: "SET_PLAYHEAD", playhead: position });
-        setUiPlayhead(position); // Update UI playhead
-
-        // Auto-stop at the end
-        if (position >= 0.999) {
-          console.log("Animation reached end of track, triggering stop");
-          handleStop();
-          return;
-        }
-
-        // Use window.requestAnimationFrame for consistency and to avoid context issues
-        animationFrame = window.requestAnimationFrame(updatePlayhead);
-      };
-
-      // Start animation - make sure there aren't any existing animation frames
-      if (playheadRefWithAnimation.animationFrame) {
-        try {
-          window.cancelAnimationFrame(playheadRefWithAnimation.animationFrame);
-        } catch (err) {
-          console.warn(
-            "Error cancelling existing animation frame before play:",
-            err
-          );
-        }
-      }
-
-      animationFrame = window.requestAnimationFrame(updatePlayhead);
-      playheadRefWithAnimation.animationFrame = animationFrame;
-      console.log("Animation frame started for play, ID:", animationFrame);
+      // let animationFrame: number; // Removed, now managed on playheadRefWithAnimation
 
       // Schedule all notes
       // First collect and sort all notes across all tracks
@@ -680,30 +727,46 @@ function App() {
       noteTimeoutsRef.current = ids;
 
       // Start the transport at the correct position
-      Tone.Transport.seconds = effectiveStart;
+      Tone.Transport.seconds = actualStartPosition ?? 0;
       Tone.Transport.start();
+      // --- Start playhead animation frame only after transport is running ---
+      if (stoppedRef.current && !playback.isPaused) {
+        playheadRefWithAnimation.animationFrame = window.requestAnimationFrame(
+          () =>
+            updatePlayhead(
+              parsedMidi,
+              tempoRatio,
+              duration,
+              playheadRefWithAnimation
+            )
+        );
+      }
+      // --- Set playhead state after transport is running ---
+      dispatchPlayback({
+        type: "PLAY",
+        position: playheadValue,
+        seconds: actualStartPosition,
+      });
     } catch (error) {
       console.error("Error during playback setup:", error);
       handleStop();
     }
   };
 
-  // Use the interface defined at the top level
-
   // Handle pause functionality with a more robust approach
+  // --- Handle pause: always record exact Tone.Transport.seconds and sync playhead ---
   const handlePause = () => {
+    stoppedRef.current = false;
     if (!playback.isPlaying) {
-      console.log("Pause called but not playing, ignoring");
       return;
     }
-
-    console.log("Executing immediate pause with forced cleanup");
-
-    // 1. Update UI state FIRST - this gives immediate user feedback
+    // Do NOT call stopAllPlayback here! Only stop the transport and animation, but keep scheduled notes.
+    // Only pause the transport and animation frame, do not clear scheduled notes or players.
     const midiTempo = parsedMidi?.header.tempos[0]?.bpm || 120;
     const tempoRatio = tempo / midiTempo;
     let currentPosition = 0;
     let playheadValue = 0;
+    const playheadRefWithAnimation = playheadRef as PlayheadRefWithAnimation;
     try {
       currentPosition = Tone.Transport.seconds;
       if (parsedMidi) {
@@ -716,17 +779,18 @@ function App() {
           position: playheadValue,
           seconds: currentPosition,
         });
-        // Cancel animation frame immediately after PAUSE dispatch
-        const playheadRefWithAnimation =
-          playheadRef as PlayheadRefWithAnimation;
+        setUiPlayhead(playheadValue); // keep playhead at pause position
+        try {
+          Tone.Transport.pause(); // Use pause, not stop/cancel
+        } catch {
+          /* ignore */
+        }
         if (playheadRefWithAnimation.animationFrame) {
           window.cancelAnimationFrame(playheadRefWithAnimation.animationFrame);
           playheadRefWithAnimation.animationFrame = undefined;
-          console.log("Animation frame cancelled immediately for pause");
         }
       }
-    } catch (err) {
-      console.error("Failed to get Transport position:", err);
+    } catch {
       if (playback.playhead > 0 && playback.playhead < 1 && parsedMidi) {
         currentPosition =
           playback.playhead * (parsedMidi.duration / tempoRatio);
@@ -736,119 +800,50 @@ function App() {
           position: playback.playhead,
           seconds: currentPosition,
         });
-        const playheadRefWithAnimation =
-          playheadRef as PlayheadRefWithAnimation;
+        setUiPlayhead(playback.playhead);
+        try {
+          Tone.Transport.pause();
+        } catch {
+          /* ignore */
+        }
         if (playheadRefWithAnimation.animationFrame) {
           window.cancelAnimationFrame(playheadRefWithAnimation.animationFrame);
           playheadRefWithAnimation.animationFrame = undefined;
-          console.log("Animation frame cancelled immediately for pause");
         }
       }
     }
-
-    // 4. Force suspend the Tone.js context - this is a drastic measure but ensures playback stops
     try {
       const audioContext = getNativeAudioContext(Tone.getContext().rawContext);
       if (audioContext && audioContext.state === "running") {
         audioContext.suspend();
-        console.log("Audio context suspended for immediate silence");
       }
-    } catch (contextErr) {
-      console.warn("Error suspending audio context:", contextErr);
+    } catch {
+      /* ignore */
     }
-
-    // 5. Cancel all scheduled events after context is suspended
-    try {
-      Tone.Transport.cancel();
-      console.log("All transport events cancelled");
-    } catch (cancelErr) {
-      console.error("Error cancelling transport events:", cancelErr);
-    }
-
-    // 6. Stop the transport
-    try {
-      Tone.Transport.stop();
-      console.log("Transport stopped");
-    } catch (stopErr) {
-      console.error("Error stopping transport:", stopErr);
-    }
-
-    // 7. Force stop all currently playing players
-    try {
-      Object.values(playersRef.current).forEach((player) => {
-        try {
-          if (player && typeof player.stop === "function") {
-            player.stop("+0");
-          }
-        } catch (playerErr) {
-          console.warn("Error stopping player during pause:", playerErr);
-        }
-      });
-    } catch (playersErr) {
-      console.error("Error stopping players:", playersErr);
-    }
-
-    // FINAL: Set UI playhead to paused value after all cleanup
-    setUiPlayhead(playheadValue);
+    // Do NOT stop/cancel/clear scheduled notes or players here!
   };
 
   const handleStop = () => {
+    // --- CRITICAL: Set stoppedRef to false before anything else ---
+    stoppedRef.current = false;
     console.log("Stop button clicked");
-    const wasPlaying = playback.isPlaying;
-    const wasPaused = playback.isPaused;
+    stopAllPlayback();
     // Reset UI state immediately
     dispatchPlayback({ type: "STOP" });
     setUiPlayhead(0);
-    // Only proceed with audio operations if we were actually playing or paused
-    if (wasPlaying || wasPaused) {
-      // Cancel all scheduled events first to prevent sounds still triggering
-      try {
-        Tone.Transport.cancel();
-        console.log("Transport events cancelled");
-      } catch (err) {
-        console.error("Error cancelling transport events:", err);
-      }
-
-      // Stop transport immediately after cancelling events
-      try {
-        // Ensure audio context is in the right state
-        if (
-          Tone.getContext().state !== "running" &&
-          Tone.getContext().state !== "closed"
-        ) {
-          console.log("Audio context not running, attempting to resume");
-          Tone.getContext()
-            .resume()
-            .catch((e) => console.warn("Could not resume audio context:", e));
-        }
-
-        // Force stop the transport with multiple approaches
-        Tone.Transport.stop();
-        Tone.Transport.position = 0; // Force position to 0
-
-        // Log transport state for debugging
-        console.log("Transport stopped and position reset");
-        console.log("Transport state:", Tone.Transport.state);
-        console.log("Transport current time:", Tone.Transport.seconds);
-        console.log("Audio context state:", Tone.getContext().state);
-      } catch (err) {
-        console.error("Error stopping transport:", err);
-      }
-    }
+    // No need for wasPlaying/wasPaused checks, stopAllPlayback handles all cases
   };
 
-  // Enhanced timeline rendering
+  // Enhanced timeline rendering (HTML/CSS version, with separate label gutter)
   const renderTimeline = () => {
     if (!parsedMidi) {
       return (
-        <p style={{ textAlign: "center", color: "#888" }}>
-          [Timeline will appear here]
-        </p>
+        <p className="timeline-placeholder">[Timeline will appear here]</p>
       );
     }
-    const { width, leftGutter, timelineWidth } = getTimelineMetrics();
+    const { timelineWidth } = getTimelineMetrics();
     const rowHeight = 40;
-    // --- Only show rows for drum notes that actually have notes in the MIDI file ---
+    // Only show rows for drum notes that actually have notes in the MIDI file
     const NOTE_NAMES = [
       "C",
       "B",
@@ -897,7 +892,7 @@ function App() {
     const measures = Math.ceil(totalBeats / beatsPerBar);
     // ---
     const gridLines = getGridLines(
-      leftGutter,
+      0, // leftGutter is now handled by flex layout, so grid starts at 0
       timelineWidth,
       measures,
       subdivision
@@ -916,35 +911,26 @@ function App() {
         velocity: noteObj.velocity,
       }))
     );
-    // Bar chart dimensions
-    const barChartHeight = 100;
-    const barChartY = rowHeight * drumRows.length + 40 + 16; // below timeline SVG
+    // Responsive timeline grid with separate label gutter
     return (
-      <div
-        ref={timelineRef}
-        style={{
-          overflowX: "auto",
-          background: "#f4f4f4",
-          borderRadius: 8,
-          border: "1.5px solid #bbb",
-          margin: "0 auto",
-          width: width + leftGutter + 20,
-        }}
-      >
-        <svg
-          id="timeline-svg"
-          width={width + leftGutter}
-          height={rowHeight * drumRows.length + 40 + barChartHeight + 32}
-          style={{ display: "block" }}
-        >
-          {/* --- Transparent drag area over the timeline --- */}
-          <rect
-            x={leftGutter}
-            y={16}
-            width={timelineWidth}
-            height={rowHeight * drumRows.length + 8}
-            fill="transparent"
-            style={{ cursor: "ew-resize" }}
+      <div className="timeline-html-wrapper">
+        <div className="timeline-flex-row">
+          {/* Drum row labels (left gutter) */}
+          <div className="timeline-label-gutter">
+            {drumRows.map(([, label]) => (
+              <div
+                className="drum-row-label-gutter"
+                key={label}
+                style={{ height: rowHeight }}
+              >
+                {label}
+              </div>
+            ))}
+          </div>
+          {/* Timeline grid, playhead, and hits */}
+          <div
+            className="timeline-html-grid"
+            ref={timelineRef}
             onPointerDown={(e) => {
               if (!parsedMidi) return;
               e.preventDefault();
@@ -961,128 +947,86 @@ function App() {
                 handlePlayheadPointerUpWindow as EventListener
               );
             }}
-          />
-          {/* Grid background */}
-          {gridLines.map((line, i) => (
-            <g key={i}>
-              <line
-                x1={line.x}
-                y1={20}
-                x2={line.x}
-                y2={rowHeight * drumRows.length + 20}
-                stroke={
-                  line.type === "bar"
-                    ? "#888"
-                    : line.type === "subdivision"
-                    ? "#bbb"
-                    : "#eee"
-                }
-                strokeWidth={
-                  line.type === "bar"
-                    ? 2
-                    : line.type === "subdivision"
-                    ? 1.1
-                    : 1
-                }
-              />
-              {line.label && (
-                <text x={line.x + 2} y={16} fontSize={12} fill="#888">
-                  {line.label}
-                </text>
-              )}
-            </g>
-          ))}
-          {/* Drum rows: label, mapping, and hits */}
-          {drumRows.map(([note, label], rowIdx) => (
-            <g key={note}>
-              {/* Row label */}
-              <rect
-                x={0}
-                y={rowHeight * rowIdx + 20}
-                width={leftGutter - 10}
-                height={rowHeight - 2}
-                fill="#e3e7ef"
-              />
-              <text
-                x={12}
-                y={rowHeight * rowIdx + rowHeight / 2 + 28}
-                fontSize={16}
-                fill="#222"
-                style={{ fontWeight: 500 }}
+            style={{ width: timelineWidth }}
+          >
+            {/* Grid lines */}
+            {gridLines.map((line, i) => (
+              <div
+                key={i}
+                className={`timeline-grid-line ${line.type}`}
+                style={{ left: `${(line.x / timelineWidth) * 100}%` }}
               >
-                {label}
-              </text>
-              {/* Drum hits */}
-              {drumNotesByRow[rowIdx].map((noteObj, i) => {
-                const x = leftGutter + (noteObj.time / maxTime) * timelineWidth;
-                const y = rowHeight * rowIdx + 26;
-                return (
-                  <rect
-                    key={i + "-note-" + rowIdx}
-                    x={x}
-                    y={y}
-                    width={16}
-                    height={rowHeight - 16}
-                    rx={4}
-                    fill="#1976d2"
-                  />
+                {line.label && (
+                  <span className="timeline-bar-label">{line.label}</span>
+                )}
+              </div>
+            ))}
+            {/* Playhead */}
+            <div
+              className="timeline-playhead"
+              style={{
+                left: `${playheadNorm * 100}%`,
+                opacity: isDraggingPlayhead ? 0.5 : 0.8,
+              }}
+              onPointerDown={(e) => {
+                if (!parsedMidi) return;
+                e.preventDefault();
+                setIsDraggingPlayhead(true);
+                const playhead = getPlayheadFromPointer(e.clientX);
+                dragPlayheadXRef.current = playhead;
+                setUiPlayhead(playhead);
+                document.body.style.userSelect = "none";
+                window.addEventListener(
+                  "pointermove",
+                  handlePlayheadPointerMoveWindow as EventListener
                 );
-              })}
-            </g>
-          ))}
-          {/* Playhead (draggable, but now hit area is the whole timeline) */}
-          <rect
-            x={leftGutter + playheadNorm * timelineWidth - 4}
-            y={16}
-            width={11}
-            height={rowHeight * drumRows.length + 8}
-            fill="#e53935"
-            opacity={isDraggingPlayhead ? 0.5 : 0.8}
-            style={{ cursor: "ew-resize" }}
-            pointerEvents="none"
-          />
-          {/* --- Velocity bar chart --- */}
-          <g>
-            <rect
-              x={leftGutter}
-              y={barChartY}
-              width={timelineWidth}
-              height={barChartHeight}
-              fill="#f0f0f0"
-              stroke="#bbb"
-              strokeWidth={1}
-              rx={8}
+                window.addEventListener(
+                  "pointerup",
+                  handlePlayheadPointerUpWindow as EventListener
+                );
+              }}
             />
-            {/* Draw a bar for each note's velocity */}
-            {velocityNotes.map((n, i) => {
-              const x = leftGutter + (n.time / maxTime) * timelineWidth;
-              const barW = 6;
-              const barH = Math.max(2, n.velocity * barChartHeight);
-              return (
-                <rect
-                  key={i + "-vel-bar"}
-                  x={x - barW / 2}
-                  y={barChartY + barChartHeight - barH}
-                  width={barW}
-                  height={barH}
-                  fill="#43a047"
-                  opacity={0.7}
-                  rx={2}
-                />
-              );
-            })}
-            {/* Y axis label */}
-            <text
-              x={leftGutter - 12}
-              y={barChartY + 12}
-              fontSize={13}
-              fill="#888"
-              textAnchor="end"
-            >
-              Velocity
-            </text>
-          </g>
-        </svg>
+            {/* Drum rows and hits */}
+            <div className="timeline-drum-rows">
+              {drumRows.map(([, label], idx) => (
+                <div
+                  className="drum-row"
+                  key={label}
+                  style={{ height: rowHeight }}
+                >
+                  <div className="drum-row-hits">
+                    {drumNotesByRow[idx].map((noteObj, i) => (
+                      <div
+                        key={i + "-note-" + idx}
+                        className="drum-hit"
+                        style={{
+                          left: `${(noteObj.time / maxTime) * 100}%`,
+                          height: rowHeight - 16,
+                          width: 16,
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        {/* Velocity bar chart */}
+        <div className="timeline-velocity-bar-chart">
+          {velocityNotes.map((n, i) => (
+            <div
+              key={i + "-vel-bar"}
+              className="velocity-bar"
+              style={{
+                left: `${(n.time / maxTime) * 100}%`,
+                height: `${n.velocity * 100}%`,
+                width: 6,
+              }}
+            />
+          ))}
+          <span className="velocity-label">Velocity</span>
+        </div>
       </div>
     );
   };
@@ -1110,31 +1054,8 @@ function App() {
     }
   }, [parsedMidi]);
 
-  // Controls section: fixed to bottom
-  // Handler for real-time tempo changes
-  const handleTempoChange = (newTempo: number) => {
-    setTempo(newTempo);
-
-    // If we're currently playing, update the Transport tempo in real-time
-    if (playback.isPlaying) {
-      console.log(`Changing tempo to ${newTempo} BPM`);
-
-      // Update Transport tempo
-      Tone.Transport.bpm.value = newTempo;
-
-      // Access the playback state if available
-      const playheadRefWithState = playheadRef as PlayheadRefWithAnimation;
-      if (
-        playheadRefWithState.playbackState &&
-        playheadRefWithState.playbackState.originalTempo
-      ) {
-        // Update tempo ratio in the playback state
-        playheadRefWithState.playbackState.tempoRatio =
-          newTempo / playheadRefWithState.playbackState.originalTempo;
-      }
-    }
-  };
-
+  // --- Controls Bar below timeline and info box ---
+  // (ControlsBar definition removed)
   // --- Drawer state ---
   const [drawerOpen, setDrawerOpen] = useState(true);
   const [drawerWidth] = useState(320); // Remove setDrawerWidth if not used
@@ -1142,113 +1063,62 @@ function App() {
   const maxDrawerWidth = 600;
   const isResizingDrawer = useRef(false);
 
+  // Handler for real-time tempo changes
+  const handleTempoChange = (newTempo: number) => {
+    setTempo(newTempo);
+    if (playback.isPlaying) {
+      Tone.Transport.bpm.value = newTempo;
+      const playheadRefWithState = playheadRef as PlayheadRefWithAnimation;
+      if (
+        playheadRefWithState.playbackState &&
+        playheadRefWithState.playbackState.originalTempo
+      ) {
+        playheadRefWithState.playbackState.tempoRatio =
+          newTempo / playheadRefWithState.playbackState.originalTempo;
+      }
+    }
+  };
+
   return (
-    <div
-      className="App"
-      style={{
-        height: "100vh",
-        width: "100vw",
-        overflow: "hidden",
-        display: "flex",
-        flexDirection: "row",
-        background: "#f4f4f4",
-        position: "relative",
-        padding: 0,
-        margin: 0,
-      }}
-    >
+    <div className="app-root">
       {/* --- Persistent Drawer Toggle Button --- */}
       <button
+        className={`drawer-toggle${drawerOpen ? " open" : ""}`}
         onClick={() => setDrawerOpen((open) => !open)}
-        style={{
-          position: "absolute",
-          top: 32,
-          left: drawerOpen ? (drawerWidth - 18) : 0,
-          width: 32,
-          height: 32,
-          borderRadius: "50%",
-          border: "1.5px solid #bbb",
-          background: "#fff",
-          color: "#222",
-          boxShadow: "0 2px 8px #0002",
-          zIndex: 500,
-          cursor: "pointer",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontWeight: 700,
-          fontSize: 18,
-          padding: 0,
-          transition: "left 0.2s",
-        }}
         title={drawerOpen ? "Hide sidebar" : "Show sidebar"}
       >
         {drawerOpen ? "⟨" : "⟩"}
       </button>
       {/* --- Left Drawer --- */}
       <div
+        className={`drawer${drawerOpen ? " open" : ""}`}
         style={{
           width: drawerOpen ? drawerWidth : 0,
           minWidth: drawerOpen ? minDrawerWidth : 0,
           maxWidth: maxDrawerWidth,
-          transition: "width 0.2s cubic-bezier(.4,2,.6,1)",
-          background: "#222c",
-          height: "100vh",
-          boxShadow: drawerOpen ? "2px 0 12px #0002" : undefined,
-          position: "relative",
-          zIndex: 200,
-          display: "flex",
-          flexDirection: "column",
-          overflow: "hidden",
         }}
       >
         {/* Drawer Content */}
         {drawerOpen && (
-          <div
-            style={{
-              padding: "32px 18px 18px 18px",
-              overflowY: "auto",
-              height: "100%",
-              background: "#222",
-              color: "#fff",
-              display: "flex",
-              flexDirection: "column",
-              gap: 24,
-            }}
-          >
-            <h2 style={{ margin: 0, fontSize: 22 }}>MIDI Files</h2>
+          <div className="drawer-content">
+            <h2 className="drawer-title">MIDI Files</h2>
             <input
               type="file"
               accept=".mid,.midi"
               multiple
               onChange={handleMidiUpload}
-              style={{ marginBottom: 12 }}
+              className="drawer-file-input"
             />
-            <div style={{ flex: 1, overflowY: "auto" }}>
+            <div className="drawer-file-list">
               {midiFiles.length > 0 ? (
-                <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+                <ul className="drawer-file-ul">
                   {midiFiles.map((file, idx) => (
-                    <li key={idx} style={{ marginBottom: 6 }}>
+                    <li key={idx} className="drawer-file-li">
                       <button
                         onClick={() => handleSelectMidi(idx)}
-                        style={{
-                          width: "100%",
-                          textAlign: "left",
-                          background:
-                            idx === selectedMidiIdx ? "#1976d2" : "#333",
-                          color: idx === selectedMidiIdx ? "#fff" : "#eee",
-                          border: "none",
-                          borderRadius: 4,
-                          padding: "8px 10px",
-                          fontWeight: idx === selectedMidiIdx ? 700 : 400,
-                          fontSize: 15,
-                          cursor: "pointer",
-                          boxShadow:
-                            idx === selectedMidiIdx
-                              ? "0 2px 8px #1976d255"
-                              : undefined,
-                          transition: "background 0.15s, color 0.15s",
-                        }}
+                        className={`drawer-file-btn${
+                          idx === selectedMidiIdx ? " selected" : ""
+                        }`}
                       >
                         {file.name}
                       </button>
@@ -1256,9 +1126,7 @@ function App() {
                   ))}
                 </ul>
               ) : (
-                <div style={{ color: "#aaa", fontSize: 15 }}>
-                  No MIDI files loaded.
-                </div>
+                <div className="drawer-empty">No MIDI files loaded.</div>
               )}
             </div>
           </div>
@@ -1266,49 +1134,23 @@ function App() {
         {/* Drawer Resize Handle */}
         {drawerOpen && (
           <div
+            className="drawer-resize-handle"
             onMouseDown={() => {
               isResizingDrawer.current = true;
-            }}
-            style={{
-              position: "absolute",
-              top: 0,
-              right: 0,
-              width: 8,
-              height: "100%",
-              cursor: "ew-resize",
-              zIndex: 250,
-              background: "#0000",
             }}
             title="Drag to resize sidebar"
           />
         )}
       </div>
       {/* --- Main Content --- */}
-      <div
-        style={{
-          flex: 1,
-          height: "100vh",
-          overflow: "auto",
-          display: "flex",
-          flexDirection: "column",
-          position: "relative",
-        }}
-      >
-        <div style={{ padding: "32px 0 0 0", flex: 1, minHeight: 0 }}>
-          <section style={{ marginLeft: 0, marginTop: 12 }}>
+      <div className="main-content">
+        <div className="main-content-inner">
+          <section className="timeline-section">
             {/* Timeline and grid subdivision select */}
-            <div
-              style={{
-                marginBottom: 8,
-                textAlign: "left",
-                maxWidth: 1220,
-                margin: "0 auto",
-                paddingLeft: 32,
-              }}
-            >
+            <div className="timeline-subdivision-bar">
               <label
                 htmlFor="subdivision-select"
-                style={{ fontWeight: 500, marginRight: 8 }}
+                className="timeline-subdivision-label"
               >
                 Grid Subdivision:
               </label>
@@ -1316,7 +1158,7 @@ function App() {
                 id="subdivision-select"
                 value={subdivision}
                 onChange={(e) => setSubdivision(Number(e.target.value))}
-                style={{ fontSize: 15, padding: "2px 8px" }}
+                className="timeline-subdivision-select"
               >
                 {subdivisionOptions.map((opt) => (
                   <option key={opt} value={opt}>
@@ -1326,37 +1168,19 @@ function App() {
               </select>
             </div>
             {/* Full-width timeline container */}
-            <div style={{ width: "100%", padding: 0, margin: 0 }}>
-              {renderTimeline()}
-            </div>
+            <div className="timeline-container">{renderTimeline()}</div>
           </section>
           {/* MIDI Info Box */}
           {parsedMidi && (
-            <div
-              style={{
-                margin: "24px auto 0 auto",
-                maxWidth: 1220,
-                background: "#f8fafc",
-                border: "1.5px solid #bbb",
-                borderRadius: 8,
-                padding: "18px 32px 14px 32px",
-                color: "#222",
-                fontSize: 17,
-                boxShadow: "0 2px 8px 0 rgba(0,0,0,0.04)",
-                display: "flex",
-                gap: 40,
-                justifyContent: "flex-start",
-                alignItems: "center",
-              }}
-            >
+            <div className="midi-info-box">
               {/* Number of notes */}
               <div>
-                <span style={{ fontWeight: 600 }}>Notes:</span>{" "}
+                <span className="midi-info-label">Notes:</span>{" "}
                 {parsedMidi.tracks.reduce((acc, t) => acc + t.notes.length, 0)}
               </div>
               {/* Note range */}
               <div>
-                <span style={{ fontWeight: 600 }}>Note Range:</span>{" "}
+                <span className="midi-info-label">Note Range:</span>{" "}
                 {(() => {
                   const allNotes = parsedMidi.tracks.flatMap((t) =>
                     t.notes.map((n) => n.midi)
@@ -1369,7 +1193,7 @@ function App() {
               </div>
               {/* Time signature */}
               <div>
-                <span style={{ fontWeight: 600 }}>Time Signature:</span>{" "}
+                <span className="midi-info-label">Time Signature:</span>{" "}
                 {(() => {
                   const ts = getTimeSignature();
                   return ts.numerator && ts.denominator
@@ -1379,7 +1203,7 @@ function App() {
               </div>
               {/* BPM */}
               <div>
-                <span style={{ fontWeight: 600 }}>BPM:</span>{" "}
+                <span className="midi-info-label">BPM:</span>{" "}
                 {parsedMidi.header.tempos.length > 0
                   ? Math.round(parsedMidi.header.tempos[0].bpm)
                   : "N/A"}
@@ -1387,18 +1211,57 @@ function App() {
             </div>
           )}
           {/* --- Controls Bar below timeline and info box --- */}
-          <div style={{ margin: "32px auto 0 auto", maxWidth: 1220 }}>
-            <EnhancedControls
-              tempo={tempo}
-              handleTempoChange={handleTempoChange}
-              isPlaying={playback.isPlaying}
-              isPaused={playback.isPaused}
-              parsedMidi={parsedMidi}
-              handlePause={handlePause}
-              handleResume={handleResume}
-              handlePlay={handlePlay}
-              handleStop={handleStop}
-            />
+          <div className="controls-bar-fixed controls-bar">
+            <div className="controls-bar">
+              <label htmlFor="tempo-slider" className="controls-bar__label">
+                Tempo: <b>{tempo} BPM</b>
+              </label>
+              <input
+                id="tempo-slider"
+                type="range"
+                min={30}
+                max={300}
+                value={tempo}
+                onChange={(e) => handleTempoChange(Number(e.target.value))}
+                className="controls-bar__slider"
+              />
+              <button
+                onClick={() => {
+                  if (playback.isPlaying) {
+                    handlePause();
+                  } else if (playback.isPaused) {
+                    handleResume();
+                  } else {
+                    handlePlay();
+                  }
+                }}
+                disabled={!parsedMidi}
+                className={`controls-bar__button controls-bar__button--play ${
+                  playback.isPaused
+                    ? "controls-bar__button--resume"
+                    : playback.isPlaying
+                    ? "controls-bar__button--pause"
+                    : "controls-bar__button--play-active"
+                }`}
+              >
+                {playback.isPaused
+                  ? "Resume"
+                  : playback.isPlaying
+                  ? "Pause"
+                  : "Play"}
+              </button>
+              <button
+                onClick={handleStop}
+                disabled={!playback.isPlaying && !playback.isPaused}
+                className={`controls-bar__button controls-bar__button--stop${
+                  !playback.isPlaying && !playback.isPaused
+                    ? " controls-bar__button--disabled"
+                    : ""
+                }`}
+              >
+                Stop
+              </button>
+            </div>
           </div>
         </div>
       </div>
