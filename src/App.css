@@ -1,16 +1,16 @@
 :root {
   --daw-bg: #181a1b;
   --daw-panel: #23272e;
-  --daw-panel-alt: #23242a;
+  --daw-panel-alt: #17181e;
   --daw-border: rgba(255, 255, 255, 0.07);
-  --daw-accent: #1976d2;
+  --daw-accent: #0080ff;
   --daw-accent2: #43a047;
-  --daw-accent3: #e53935;
+  --daw-accent3: #ff9900;
   --daw-text: #e0e0e0;
   --daw-text-dim: #b0b0b0;
   --daw-btn-bg: #23272e;
   --daw-btn-hover: #1976d2;
-  --daw-btn-active: #43a047;
+  --daw-btn-active: #00ff0d;
   --daw-btn-border: #333a;
   --daw-shadow: 0 2px 12px #000a;
 }
@@ -56,7 +56,7 @@
   gap: 24px;
 }
 .drawer-title {
-  color: var(--daw-accent);
+  color: var(--daw-text);
   font-size: 22px;
   letter-spacing: 0.5px;
   font-weight: 700;
@@ -81,7 +81,7 @@
 .drawer-file-input-label:hover,
 .drawer-file-input-label:focus {
   background: var(--daw-accent);
-  color: #fff;
+  color: var(--daw-text);
   border-color: var(--daw-accent);
 }
 .drawer-file-list {
@@ -106,7 +106,7 @@
 }
 .drawer-folder-label:hover {
   background: var(--daw-accent);
-  color: #fff;
+  color: var(--daw-text);
 }
 .drawer-file-ul {
   list-style: none;
@@ -133,14 +133,14 @@
 .drawer-file-btn:focus,
 .drawer-file-btn.active {
   background: var(--daw-accent);
-  color: #fff;
+  color: var(--daw-text);
   font-weight: 700;
   box-shadow: 0 2px 8px var(--daw-accent2) 33;
   outline: none;
 }
 .drawer-file-btn:hover:not(.selected) {
   background: var(--daw-btn-hover);
-  color: #fff;
+  color: var(--daw-text);
 }
 .drawer-empty {
   color: #aaa;
@@ -377,19 +377,17 @@
   gap: 0.7em;
   font-size: 21px;
   padding: 0.5em 2.2em;
-  border-radius: 7px;
+  border-radius: 0px;
   font-weight: 700;
 }
 .controls-lower__button .icon {
   font-size: 1.3em;
-  margin-right: 0.3em;
   vertical-align: middle;
 }
 
 /* --- Drum Labels --- */
 .drum-row-label-gutter {
-  color: #fff;
-  text-shadow: 0 1px 2px #000a;
+  color: var(--daw-text);
   background: var(--daw-panel);
   border-bottom: 1px solid var(--daw-border);
 }
@@ -397,12 +395,10 @@
 /* --- Timeline Grid Lines --- */
 .timeline-grid-line.bar {
   background: var(--daw-accent2);
-  opacity: 0.35;
   width: 2.5px;
 }
 .timeline-grid-line.subdivision {
   background: var(--daw-accent);
-  opacity: 0.18;
   width: 1.5px;
 }
 
@@ -498,6 +494,7 @@ svg {
   border-right: 1.5px solid var(--daw-border);
   z-index: 10;
   height: 100%; /* Fill parent height */
+  width: 220px;
 }
 
 .timeline-drum-rows {
@@ -515,8 +512,7 @@ svg {
   flex: 1 1 0;
   min-height: 0;
   height: 100%;
-  font-size: 16px;
-  color: #222;
+  font-size: 14px;
   font-weight: 500;
   padding: 0 12px 0 8px;
   width: 100%;
@@ -550,13 +546,13 @@ svg {
 }
 .timeline-grid-line.bar {
   background: var(--daw-accent2);
-  opacity: 0.35;
+  opacity: 0.5;
   width: 2.5px;
   min-height: 100%;
 }
 .timeline-grid-line.subdivision {
   background: var(--daw-accent);
-  opacity: 0.18;
+  opacity: 0.25;
   width: 1.5px;
   min-height: 100%;
 }
@@ -576,7 +572,7 @@ svg {
   position: absolute;
   top: 0;
   bottom: 0;
-  width: 11px;
+  width: 6px;
   background: var(--daw-accent3);
   border-radius: 4px;
   z-index: 10;
@@ -636,28 +632,208 @@ svg {
 /* Velocity Bar Chart */
 .timeline-velocity-bar-chart {
   position: relative;
-  margin-left: 0;
+  margin-left: 220px; /* align with timeline grid, after label gutter */
   height: 150px;
   background: var(--daw-panel);
   border-top: 1.5px solid var(--daw-border);
   border-radius: 0 0 8px 8px;
   margin-top: 0;
   z-index: 2;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
 }
 .velocity-bar {
+  position: absolute;
+  bottom: 0;
   background: var(--daw-accent2);
   opacity: 0.7;
   width: 6px;
 }
 .velocity-label {
   position: absolute;
-  left: 0;
-  top: -22px;
+  left: -210px;
+  top: 8px;
   font-size: 13px;
   color: var(--daw-accent2);
-  text-align: left;
+  text-align: right;
   z-index: 3;
   width: 200px;
   pointer-events: none;
-  padding-left: 8px;
+  padding-left: 0;
+}
+
+/* --- Controls Upper/Lower: flat, no border, no radius, no gradient --- */
+.controls-upper {
+  background: #23242a;
+  border: none;
+  border-radius: 0;
+  box-shadow: 0 2px 8px 0 #0002;
+  padding: 18px 32px 14px 32px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+.controls-lower {
+  background: #23272e;
+  border: none;
+  border-radius: 0;
+  box-shadow: 0 -2px 16px #0002;
+  padding: 18px 0 18px 0;
+  gap: 36px;
+}
+
+/* Tempo Control */
+.tempo-control {
+  display: flex;
+  align-items: center;
+  gap: 0.7em;
+  background: var(--daw-panel);
+  border-radius: 8px;
+  padding: 0.4em 1.2em;
+  box-shadow: 0 2px 8px #0003;
+  border: 2px solid var(--daw-accent2);
+}
+.tempo-control__label {
+  color: var(--daw-accent2);
+  font-size: 17px;
+  font-weight: 600;
+  margin-right: 0.5em;
+}
+.tempo-control__input {
+  width: 64px;
+  font-size: 1.5em;
+  font-family: inherit;
+  background: var(--daw-panel-alt);
+  color: var(--daw-accent);
+  border: 2px solid var(--daw-accent);
+  border-radius: 6px;
+  text-align: center;
+  font-weight: 700;
+  outline: none;
+  box-shadow: 0 1px 6px #0005;
+  transition: border 0.15s, color 0.15s;
+}
+.tempo-control__input:focus {
+  border-color: var(--daw-accent2);
+  color: var(--daw-accent2);
+}
+.tempo-control__stepper {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.tempo-control__button {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--daw-btn-bg);
+  color: var(--daw-accent);
+  border: 1.5px solid var(--daw-btn-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1em;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border 0.15s;
+  box-shadow: 0 1px 4px #0002;
+  padding: 0;
+}
+.tempo-control__button:hover {
+  background: var(--daw-accent);
+  color: #fff;
+  border-color: var(--daw-accent);
+}
+.tempo-control__button:active {
+  background: var(--daw-accent2);
+  color: #fff;
+  border-color: var(--daw-accent2);
+}
+
+/* --- Tempo Stepper Control --- */
+.tempo-stepper {
+  display: flex;
+  align-items: center;
+  background: var(--daw-panel);
+  border: 2px solid var(--daw-accent2);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px #0004;
+  padding: 0 10px;
+  height: 48px;
+  gap: 0.5em;
+}
+.tempo-stepper__label {
+  color: var(--daw-accent2);
+  font-size: 17px;
+  font-weight: 700;
+  margin-right: 10px;
+  letter-spacing: 0.1px;
+}
+.tempo-stepper__input {
+  width: 64px;
+  background: var(--daw-panel-alt);
+  color: var(--daw-text);
+  border: 2px solid var(--daw-accent);
+  border-radius: 6px;
+  font-size: 22px;
+  font-weight: 700;
+  text-align: center;
+  outline: none;
+  transition: border 0.15s, box-shadow 0.15s;
+  box-shadow: 0 1px 4px #0003;
+  margin-right: 0.5em;
+}
+.tempo-stepper__input:focus {
+  border-color: var(--daw-accent3);
+  box-shadow: 0 0 0 2px var(--daw-accent3) 44;
+}
+.tempo-stepper__buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.tempo-stepper__btn {
+  background: var(--daw-btn-bg);
+  color: var(--daw-accent);
+  border: 1.5px solid var(--daw-btn-border);
+  border-radius: 4px;
+  width: 32px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border 0.15s;
+  box-shadow: 0 1px 4px #0002;
+  padding: 0;
+}
+.tempo-stepper__btn:active {
+  background: var(--daw-accent);
+  color: #fff;
+  border-color: var(--daw-accent3);
+}
+.tempo-stepper__btn:hover:not(:active) {
+  background: var(--daw-accent2);
+  color: #fff;
+  border-color: var(--daw-accent2);
+}
+
+/* Responsive: shrink input and buttons on small screens */
+@media (max-width: 600px) {
+  .tempo-stepper {
+    height: 38px;
+    padding: 0 4px;
+  }
+  .tempo-stepper__input {
+    width: 44px;
+    font-size: 16px;
+  }
+  .tempo-stepper__btn {
+    width: 22px;
+    height: 16px;
+    font-size: 13px;
+  }
 }

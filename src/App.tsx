@@ -1374,18 +1374,56 @@ function App() {
         </div>
         <section className="timeline-section">{renderTimeline()}</section>
         <div className="controls-lower">
-          <label htmlFor="tempo-slider" className="controls-lower__label">
-            Tempo: <b>{Math.round(tempo)} BPM</b>
-          </label>
-          <input
-            id="tempo-slider"
-            type="range"
-            min={30}
-            max={300}
-            value={tempo}
-            onChange={(e) => handleTempoChange(Number(e.target.value))}
-            className="controls-lower__slider"
-          />
+          {/* --- DAW-style Tempo Stepper --- */}
+          <div className="tempo-stepper" title="Set playback tempo (BPM)">
+            <span className="tempo-stepper__label">Tempo</span>
+            <input
+              className="tempo-stepper__input"
+              type="number"
+              min={30}
+              max={300}
+              value={tempo}
+              step={1}
+              onChange={(e) => {
+                let val = Number(e.target.value);
+                if (isNaN(val)) val = 120;
+                val = Math.max(30, Math.min(300, val));
+                handleTempoChange(val);
+              }}
+              aria-label="Tempo (BPM)"
+            />
+            <div className="tempo-stepper__buttons">
+              <button
+                className="tempo-stepper__btn"
+                tabIndex={-1}
+                onClick={() => handleTempoChange(Math.min(300, tempo + 1))}
+                aria-label="Increase tempo"
+                type="button"
+              >
+                ▲
+              </button>
+              <button
+                className="tempo-stepper__btn"
+                tabIndex={-1}
+                onClick={() => handleTempoChange(Math.max(30, tempo - 1))}
+                aria-label="Decrease tempo"
+                type="button"
+              >
+                ▼
+              </button>
+            </div>
+            <span
+              style={{
+                marginLeft: 10,
+                color: "var(--daw-accent2)",
+                fontWeight: 700,
+                fontSize: 15,
+              }}
+            >
+              BPM
+            </span>
+          </div>
+          {/* --- End Tempo Stepper --- */}
           <button
             onClick={() => {
               if (playback.isPlaying) {
