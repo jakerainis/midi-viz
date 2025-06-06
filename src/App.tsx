@@ -434,11 +434,11 @@ function App() {
 
   // Select a different MIDI file
   const handleSelectMidi = async (idx: number) => {
-    stopAllPlayback(); // Stop playback before loading new file
-    setUiPlayhead(0); // Reset playhead to beginning
-    dispatchPlayback({ type: "STOP" }); // Reset playback state to initial
+    stopAllPlayback();
+    setUiPlayhead(0);
+    dispatchPlayback({ type: "STOP" });
     setSelectedMidiIdx(idx);
-    setSelectedPreloadedMidi(null); // Clear selected preloaded MIDI
+    setSelectedPreloadedMidi(null);
     const file = midiFiles[idx];
     const arrayBuffer = await file.arrayBuffer();
     const midi = new Midi(arrayBuffer);
@@ -479,9 +479,9 @@ function App() {
     folder: string,
     filename: string
   ) => {
-    stopAllPlayback(); // Stop playback before loading new file
-    setUiPlayhead(0); // Reset playhead to beginning
-    dispatchPlayback({ type: "STOP" }); // Reset playback state to initial
+    stopAllPlayback();
+    setUiPlayhead(0);
+    dispatchPlayback({ type: "STOP" });
     // Encode each path segment, not the slashes
     const url = `/midi/${folder
       .split("/")
@@ -1067,10 +1067,10 @@ function App() {
     // No drum sample preload or mapping needed
   }, []);
 
-  // Set tempo to MIDI file's tempo on load
+  // Set tempo to MIDI file's tempo on load (embedded, filename, or fallback)
   useEffect(() => {
-    if (parsedMidi && parsedMidi.header.tempos.length > 0) {
-      setTempo(Math.round(parsedMidi.header.tempos[0].bpm));
+    if (parsedMidi) {
+      setTempo(Math.round(getMidiTempo()));
     }
   }, [parsedMidi]);
 
@@ -1089,7 +1089,17 @@ function App() {
   const [expandedUploaded, setExpandedUploaded] = useState(true);
   const handleToggleUploaded = () => setExpandedUploaded((prev) => !prev);
 
-  // Handler for real-time tempo changes
+  // --- Drawer search filter state ---
+  const [drawerFilter, setDrawerFilter] = useState("");
+
+  // --- Exact substring search utility for search mode ---
+  function exactMatch(str: string, pattern: string) {
+    // Only match if pattern is non-empty and is a lower-case substring of str
+    if (!pattern) return true;
+    return str.toLowerCase().includes(pattern);
+  }
+
+  // --- Handler for real-time tempo changes ---
   const handleTempoChange = (newTempo: number) => {
     setTempo(newTempo);
     if (playback.isPlaying && parsedMidi) {
@@ -1180,8 +1190,9 @@ function App() {
     return { numerator: 4, denominator: 4 }; // default 4/4
   }
 
-  // Helper to get MIDI tempo (with fallback)
+  // Helper to get MIDI tempo (with fallback and filename parsing)
   function getMidiTempo() {
+    // 1. Embedded tempo
     if (
       parsedMidi &&
       parsedMidi.header &&
@@ -1191,7 +1202,23 @@ function App() {
     ) {
       return parsedMidi.header.tempos[0].bpm;
     }
-    return 120; // default tempo
+    // 2. Try to parse BPM from filename (uploaded or preloaded)
+    let filename = "";
+    if (selectedMidiIdx !== null && midiFiles[selectedMidiIdx]) {
+      filename = midiFiles[selectedMidiIdx].name;
+    } else if (selectedPreloadedMidi) {
+      filename = selectedPreloadedMidi.filename;
+    }
+    // Regex: match leading integer (optionally followed by 'bpm')
+    const match = filename.match(/^(\d{2,3})(?:bpm)?/i);
+    if (match && match[1]) {
+      const bpm = parseInt(match[1], 10);
+      if (!isNaN(bpm) && bpm > 30 && bpm < 400) {
+        return bpm;
+      }
+    }
+    // 3. Fallback
+    return 120;
   }
 
   // --- Loop state ---
@@ -1321,7 +1348,42 @@ function App() {
         document.documentElement.style.setProperty(key, value);
       });
     }
-  }, [selectedTheme]);
+  }, [selectedTheme, DAW_THEMES]);
+
+  // --- Spacebar play/pause global hotkey ---
+  useEffect(() => {
+    const handleSpacebar = (e: KeyboardEvent) => {
+      // Ignore if focus is in an input, textarea, or select
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (
+        tag === "INPUT" ||
+        tag === "TEXTAREA" ||
+        tag === "SELECT" ||
+        (e.target as HTMLElement)?.isContentEditable
+      )
+        return;
+      if (e.code === "Space" || e.key === " " || e.key === "Spacebar") {
+        e.preventDefault();
+        if (playback.isPlaying) {
+          handlePause();
+        } else if (playback.isPaused) {
+          handleResume();
+        } else if (parsedMidi) {
+          // Always allow play if a MIDI file is loaded and not playing
+          handlePlay();
+        }
+      }
+    };
+    window.addEventListener("keydown", handleSpacebar);
+    return () => window.removeEventListener("keydown", handleSpacebar);
+  }, [
+    playback.isPlaying,
+    playback.isPaused,
+    handlePlay,
+    handlePause,
+    handleResume,
+    parsedMidi,
+  ]);
 
   return (
     <div className="app-root">
@@ -1346,7 +1408,29 @@ function App() {
         {drawerOpen && (
           <div className="drawer-content">
             <h2 className="drawer-title">MIDI Files</h2>
+
+            {/* Drawer search filter */}
+            <div className="drawer-search-filter">
+              <input
+                type="text"
+                placeholder="Search folders/files..."
+                value={drawerFilter}
+                onChange={(e) => setDrawerFilter(e.target.value)}
+                className="drawer-search-input"
+              />
+              {drawerFilter && (
+                <button
+                  className="drawer-search-clear"
+                  onClick={() => setDrawerFilter("")}
+                  title="Clear search"
+                >
+                  ×
+                </button>
+              )}
+            </div>
+            {/* Uploaded Files Section */}
             {/* File input with custom label */}
+            <hr />
             <label
               htmlFor="drawer-file-input"
               className="drawer-file-input-label"
@@ -1361,81 +1445,129 @@ function App() {
               onChange={handleMidiUpload}
               className="drawer-file-input"
             />
-            {/* Uploaded Files Section */}
-            {midiFiles.length > 0 && (
-              <div className="drawer-uploaded-section">
-                <div
-                  className="drawer-folder-label"
-                  onClick={handleToggleUploaded}
-                  style={{ cursor: "pointer", fontWeight: 600 }}
-                >
-                  {expandedUploaded ? "▼" : "▶"} Uploaded Files
-                </div>
-                {expandedUploaded && (
-                  <ul className="drawer-file-ul">
-                    {midiFiles.map((file, idx) => (
-                      <li key={idx} className="drawer-file-li">
-                        <button
-                          onClick={() => handleSelectMidi(idx)}
-                          className={`drawer-file-btn${
-                            idx === selectedMidiIdx ? " selected" : ""
-                          }`}
-                        >
-                          {file.name}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            )}
-            {/* Preloaded MIDI Folder Tree */}
-            <div className="drawer-folder-tree">
-              {Object.entries(midiManifest).map(([folder, files]) => (
-                <div key={folder} className="drawer-folder">
+            {(!drawerFilter ||
+              midiFiles.some((file) =>
+                exactMatch(file.name, drawerFilter.toLowerCase())
+              )) &&
+              midiFiles.length > 0 && (
+                <div className="drawer-uploaded-section">
                   <div
                     className="drawer-folder-label"
-                    onClick={() => handleToggleFolder(folder)}
+                    onClick={handleToggleUploaded}
                     style={{ cursor: "pointer", fontWeight: 600 }}
                   >
-                    {expandedFolders[folder] ? "▼" : "▶"} {folder}
+                    {expandedUploaded ? "▼" : "▶"} Uploaded Files
                   </div>
-                  {expandedFolders[folder] && (
+                  {expandedUploaded && (
                     <ul className="drawer-file-ul">
-                      {files.map((filename) => (
-                        <li key={filename} className="drawer-file-li">
-                          <button
-                            onClick={() =>
-                              handleSelectPreloadedMidi(folder, filename)
-                            }
-                            className={`drawer-file-btn${
-                              selectedPreloadedMidi &&
-                              selectedPreloadedMidi.folder === folder &&
-                              selectedPreloadedMidi.filename === filename
-                                ? " selected"
-                                : ""
-                            }`}
-                          >
-                            {filename}
-                          </button>
-                        </li>
-                      ))}
+                      {midiFiles
+                        .filter(
+                          (file) =>
+                            !drawerFilter ||
+                            exactMatch(file.name, drawerFilter.toLowerCase())
+                        )
+                        .map((file, idx) => (
+                          <li key={idx} className="drawer-file-li">
+                            <button
+                              onClick={() => handleSelectMidi(idx)}
+                              onDoubleClick={async () => {
+                                await handleSelectMidi(idx);
+                                handlePlay();
+                              }}
+                              className={`drawer-file-btn${
+                                idx === selectedMidiIdx ? " selected" : ""
+                              }`}
+                            >
+                              {file.name}
+                            </button>
+                          </li>
+                        ))}
                     </ul>
                   )}
                 </div>
-              ))}
+              )}
+            {/* Preloaded MIDI Folder Tree (exact lower-case match only): */}
+            <div className="drawer-folder-tree">
+              {Object.entries(midiManifest)
+                .filter(([folder, files]) => {
+                  if (!drawerFilter) return true;
+                  const query = drawerFilter.toLowerCase();
+                  // Show folder if folder name or any file matches exactly (lower-case substring)
+                  if (exactMatch(folder, query)) return true;
+                  return files.some((f) => exactMatch(f, query));
+                })
+                .map(([folder, files]) => {
+                  // Only expand folders with results in search mode
+                  const expanded = drawerFilter
+                    ? true
+                    : expandedFolders[folder];
+                  // Only show files that match the search (or all if not searching)
+                  const query = drawerFilter.toLowerCase();
+                  const visibleFiles = drawerFilter
+                    ? files.filter(
+                        (f) => exactMatch(f, query) || exactMatch(folder, query)
+                      )
+                    : files;
+                  // If searching and no files in this folder match, skip rendering this folder
+                  if (
+                    drawerFilter &&
+                    visibleFiles.length === 0 &&
+                    !exactMatch(folder, query)
+                  )
+                    return null;
+                  return (
+                    <div key={folder} className="drawer-folder">
+                      <div
+                        className="drawer-folder-label"
+                        onClick={() => handleToggleFolder(folder)}
+                        style={{ cursor: "pointer", fontWeight: 600 }}
+                      >
+                        {expanded ? "▼" : "▶"} {folder}
+                      </div>
+                      {expanded && (
+                        <ul className="drawer-file-ul">
+                          {visibleFiles.map((filename) => (
+                            <li key={filename} className="drawer-file-li">
+                              <button
+                                onClick={() =>
+                                  handleSelectPreloadedMidi(folder, filename)
+                                }
+                                onDoubleClick={async () => {
+                                  await handleSelectPreloadedMidi(
+                                    folder,
+                                    filename
+                                  );
+                                  handlePlay();
+                                }}
+                                className={`drawer-file-btn${
+                                  selectedPreloadedMidi &&
+                                  selectedPreloadedMidi.folder === folder &&
+                                  selectedPreloadedMidi.filename === filename
+                                    ? " selected"
+                                    : ""
+                                }`}
+                              >
+                                {filename}
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  );
+                })}
             </div>
+            {/* Drawer Resize Handle */}
+            {drawerOpen && (
+              <div
+                className="drawer-resize-handle"
+                onMouseDown={() => {
+                  isResizingDrawer.current = true;
+                }}
+                title="Drag to resize sidebar"
+              />
+            )}
           </div>
-        )}
-        {/* Drawer Resize Handle */}
-        {drawerOpen && (
-          <div
-            className="drawer-resize-handle"
-            onMouseDown={() => {
-              isResizingDrawer.current = true;
-            }}
-            title="Drag to resize sidebar"
-          />
         )}
       </div>
       {/* --- Main Content --- */}

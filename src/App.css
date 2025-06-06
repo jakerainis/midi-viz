@@ -67,6 +67,13 @@
   overflow-y: auto;
   padding: 32px 18px 18px 18px;
 }
+.drawer-content hr {
+  width: 100%;
+  border-bottom: 0;
+  border-left: 0;
+  border-right: 0;
+  border-top: 1px solid var(--daw-border);
+}
 .drawer-title {
   font-size: 22px;
   font-weight: 700;
@@ -78,14 +85,15 @@
   display: none;
 }
 .drawer-file-input-label {
+  background: var(--daw-panel-gradient);
   display: inline-block;
   color: var(--daw-text);
   border: 1px solid var(--daw-btn-border);
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
+  /* margin-bottom: -12px; */
   padding: 8px 20px;
   border-radius: 6px;
-  margin-bottom: 14px;
   transition: background 0.15s, color 0.15s, border 0.15s;
 }
 .drawer-file-input-label:hover,
@@ -206,7 +214,7 @@
   color: var(--daw-text);
   display: block;
   font-size: 12px;
-  padding: 12px 0px 12px 12px;
+  padding: 12px;
   padding-right: 24px;
 }
 .controls-upper__label:last-child {
@@ -600,7 +608,7 @@ svg {
   background: var(--daw-panel-gradient, var(--daw-panel));
   border-radius: 3px;
   border: 1px solid var(--daw-border);
-  box-shadow: 0 1px 2px rgba(0,0,0,0.12);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
 }
 .controls-lower__slider::-webkit-slider-thumb {
   -webkit-appearance: none;
@@ -610,7 +618,7 @@ svg {
   border-radius: 50%;
   background: var(--daw-accent2, var(--daw-accent));
   border: 2px solid var(--daw-accent);
-  box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
   margin-top: -6px;
   transition: background 0.2s, border 0.2s;
 }
@@ -630,7 +638,8 @@ svg {
     to right,
     var(--daw-accent) 0%,
     var(--daw-accent) calc(var(--slider-progress, 0%) + 0.1%),
-    var(--daw-panel-gradient, var(--daw-panel)) calc(var(--slider-progress, 0%) + 0.1%),
+    var(--daw-panel-gradient, var(--daw-panel))
+      calc(var(--slider-progress, 0%) + 0.1%),
     var(--daw-panel-gradient, var(--daw-panel)) 100%
   );
 }
@@ -648,7 +657,7 @@ svg {
   border-radius: 50%;
   background: var(--daw-accent2, var(--daw-accent));
   border: 2px solid var(--daw-accent);
-  box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
   transition: background 0.2s, border 0.2s;
 }
 .controls-lower__slider:focus::-moz-range-thumb,
@@ -682,7 +691,7 @@ svg {
   border-radius: 50%;
   background: var(--daw-accent2, var(--daw-accent));
   border: 2px solid var(--daw-accent);
-  box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
   transition: background 0.2s, border 0.2s;
 }
 .controls-lower__slider:focus::-ms-thumb,
@@ -709,7 +718,8 @@ svg {
 /* Set slider progress variable dynamically (for Webkit) */
 .controls-lower__slider {
   --slider-progress: calc(
-    (var(--value, 0) - var(--min, 30)) * 100 / (var(--max, 300) - var(--min, 30))
+    (var(--value, 0) - var(--min, 30)) * 100 /
+      (var(--max, 300) - var(--min, 30))
   );
 }
 
@@ -753,4 +763,57 @@ svg {
   .main-content > * {
     min-width: 0;
   }
+}
+
+/* Search Filter */
+.drawer-search-filter {
+  align-items: center;
+  border-radius: 7px;
+  border: 1px solid var(--daw-border);
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.4rem 0.7rem 0.4rem 0.7rem;
+  position: relative;
+}
+
+.drawer-search-input {
+  flex: 1 1 auto;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--daw-label);
+  font-size: 14px;
+  padding: 0.3rem 2.1rem 0.3rem 0.5rem;
+  border-radius: 5px;
+  font-family: inherit;
+  letter-spacing: 0.01em;
+  transition: background 0.2s;
+}
+.drawer-search-input::placeholder {
+  color: #888a8e;
+  opacity: 1;
+  font-style: italic;
+}
+
+.drawer-search-clear {
+  position: absolute;
+  right: 0.8rem;
+  background: none;
+  border: none;
+  color: var(--daw-accent);
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  border-radius: 50%;
+  width: 1.5rem;
+  height: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+}
+.drawer-search-clear:hover {
+  background: var(--daw-btn-hover);
+  color: #fff;
 }
