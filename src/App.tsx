@@ -455,6 +455,13 @@ function App() {
     Record<string, boolean>
   >({});
 
+  const handleToggleFolder = (folder: string) => {
+    setExpandedFolders((prev) => ({
+      ...prev,
+      [folder]: !prev[folder],
+    }));
+  };
+
   // Fetch manifest.json from /public/midi/manifest.json on mount
   useEffect(() => {
     fetch("/midi/manifest.json")
@@ -462,11 +469,6 @@ function App() {
       .then((manifest) => setMidiManifest(manifest))
       .catch((err) => console.error("Failed to load MIDI manifest:", err));
   }, []);
-
-  // Handler to expand/collapse folders
-  const handleToggleFolder = (folder: string) => {
-    setExpandedFolders((prev) => ({ ...prev, [folder]: !prev[folder] }));
-  };
 
   // Add state to track selected preloaded MIDI file
   const [selectedPreloadedMidi, setSelectedPreloadedMidi] = useState<{
@@ -1059,19 +1061,32 @@ function App() {
     setSelectedPreloadedMidi(null);
     setUiPlayhead(0);
     dispatchPlayback({ type: "STOP" });
-    // Preload a MIDI file from public/sample-midi if desired (commented out)
-    // const midiUrl = "/sample-midi/138bpm - Power Up Double Bass 01.mid";
-    // fetch(midiUrl)
-    //   .then((res) => res.arrayBuffer())
-    //   .then((arrayBuffer) => {
-    //     const midi = new Midi(arrayBuffer);
-    //     setParsedMidi(midi);
-    //     setMidiFiles([
-    //       new File([arrayBuffer], "138bpm - Power Up Double Bass 01.mid"),
-    //     ]);
-    //     setSelectedMidiIdx(0);
-    //   });
   }, []);
+
+  // Preload the first preloaded MIDI file after manifest loads, if no uploaded files
+  useEffect(() => {
+    // Only run if manifest is loaded, no uploaded files, and no selected MIDI
+    if (
+      midiFiles.length === 0 &&
+      parsedMidi === null &&
+      selectedPreloadedMidi === null &&
+      midiManifest &&
+      Object.keys(midiManifest).length > 0
+    ) {
+      const firstFolder = Object.keys(midiManifest)[0];
+      const firstFile = midiManifest[firstFolder]?.[0];
+      if (firstFolder && firstFile) {
+        handleSelectPreloadedMidi(firstFolder, firstFile);
+      }
+    }
+    // Only run when manifest, midiFiles, parsedMidi, selectedPreloadedMidi, or handleSelectPreloadedMidi changes
+  }, [
+    midiManifest,
+    midiFiles.length,
+    parsedMidi,
+    selectedPreloadedMidi,
+    handleSelectPreloadedMidi,
+  ]);
 
   // Set tempo to MIDI file's tempo on load (embedded, filename, or fallback)
   useEffect(() => {
