@@ -1091,6 +1091,8 @@ function App() {
 
   // --- Drawer search filter state ---
   const [drawerFilter, setDrawerFilter] = useState("");
+  // Ref for drawer search input
+  const drawerSearchInputRef = useRef<HTMLInputElement | null>(null);
 
   // --- Exact substring search utility for search mode ---
   function exactMatch(str: string, pattern: string) {
@@ -1374,8 +1376,82 @@ function App() {
         }
       }
     };
+    // --- +/- BPM hotkeys ---
+    const handleBpmHotkeys = (e: KeyboardEvent) => {
+      // Ignore if focus is in an input, textarea, or select
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (
+        tag === "INPUT" ||
+        tag === "TEXTAREA" ||
+        tag === "SELECT" ||
+        (e.target as HTMLElement)?.isContentEditable
+      )
+        return;
+      // + or = (main keyboard or numpad)
+      if (
+        (e.key === "+" || e.key === "=" || e.code === "NumpadAdd") &&
+        !e.shiftKey
+      ) {
+        e.preventDefault();
+        handleTempoChange(Math.min(tempo + 10, 300));
+      }
+      // - or _ (main keyboard or numpad)
+      if (e.key === "-" || e.key === "_" || e.code === "NumpadSubtract") {
+        e.preventDefault();
+        handleTempoChange(Math.max(tempo - 10, 30));
+      }
+    };
+    // --- Command+F / Ctrl+F hotkey for drawer search ---
+    const handleFindHotkey = (e: KeyboardEvent) => {
+      const isMac = navigator.platform.toLowerCase().includes("mac");
+      const isFind =
+        (isMac && e.metaKey && e.key.toLowerCase() === "f") ||
+        (!isMac && e.ctrlKey && e.key.toLowerCase() === "f");
+      if (isFind) {
+        e.preventDefault();
+        // Open drawer if not open
+        if (!drawerOpen) setDrawerOpen(true);
+        // Focus/blur toggle
+        const input = drawerSearchInputRef.current;
+        if (input) {
+          if (document.activeElement === input) {
+            input.blur();
+          } else {
+            input.focus();
+            input.select();
+          }
+        }
+      }
+    };
+    // --- 'g' key cycles gridline subdivision ---
+    const handleGridlineHotkey = (e: KeyboardEvent) => {
+      // Ignore if focus is in an input, textarea, or select
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (
+        tag === "INPUT" ||
+        tag === "TEXTAREA" ||
+        tag === "SELECT" ||
+        (e.target as HTMLElement)?.isContentEditable
+      )
+        return;
+      if (e.key === "g" && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        e.preventDefault();
+        setSubdivision((prev) => {
+          const idx = subdivisionOptions.indexOf(prev);
+          return subdivisionOptions[(idx + 1) % subdivisionOptions.length];
+        });
+      }
+    };
     window.addEventListener("keydown", handleSpacebar);
-    return () => window.removeEventListener("keydown", handleSpacebar);
+    window.addEventListener("keydown", handleBpmHotkeys);
+    window.addEventListener("keydown", handleFindHotkey);
+    window.addEventListener("keydown", handleGridlineHotkey);
+    return () => {
+      window.removeEventListener("keydown", handleSpacebar);
+      window.removeEventListener("keydown", handleBpmHotkeys);
+      window.removeEventListener("keydown", handleFindHotkey);
+      window.removeEventListener("keydown", handleGridlineHotkey);
+    };
   }, [
     playback.isPlaying,
     playback.isPaused,
@@ -1383,6 +1459,9 @@ function App() {
     handlePause,
     handleResume,
     parsedMidi,
+    tempo,
+    handleTempoChange,
+    drawerOpen,
   ]);
 
   // Stop and reset playback on window resize
@@ -1428,6 +1507,7 @@ function App() {
                 value={drawerFilter}
                 onChange={(e) => setDrawerFilter(e.target.value)}
                 className="drawer-search-input"
+                ref={drawerSearchInputRef}
               />
               {drawerFilter && (
                 <button
@@ -1478,19 +1558,25 @@ function App() {
                             exactMatch(file.name, drawerFilter.toLowerCase())
                         )
                         .map((file, idx) => (
-                          <li key={idx} className="drawer-file-li">
-                            <button
-                              onClick={() => handleSelectMidi(idx)}
-                              onDoubleClick={async () => {
+                          <li
+                            key={idx}
+                            className={`drawer-file-li${
+                              selectedMidiIdx === idx ? " selected" : ""
+                            }`}
+                            tabIndex={0}
+                            onClick={async () => {
+                              await handleSelectMidi(idx);
+                              handlePlay();
+                            }}
+                            onKeyDown={async (e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault();
                                 await handleSelectMidi(idx);
                                 handlePlay();
-                              }}
-                              className={`drawer-file-btn${
-                                idx === selectedMidiIdx ? " selected" : ""
-                              }`}
-                            >
-                              {file.name}
-                            </button>
+                              }
+                            }}
+                          >
+                            {file.name}
                           </li>
                         ))}
                     </ul>
@@ -1603,6 +1689,8 @@ function App() {
             <strong>File: </strong>
             {selectedMidiIdx !== null && midiFiles[selectedMidiIdx]
               ? midiFiles[selectedMidiIdx].name
+              : selectedPreloadedMidi
+              ? selectedPreloadedMidi.filename
               : "No MIDI file selected"}
           </span>
           <span className="controls-upper__label">
