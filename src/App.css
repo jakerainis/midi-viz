@@ -132,6 +132,8 @@
   margin: 0;
 }
 .drawer-file-li {
+  color: var(--daw-text-dim);
+  font-size: 12px;
   list-style: none;
   margin-bottom: 4px;
 }

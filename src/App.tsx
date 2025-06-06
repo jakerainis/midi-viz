@@ -1354,6 +1354,10 @@ function App() {
 
   // --- Spacebar play/pause global hotkey ---
   useEffect(() => {
+    // Always use the latest playback and parsedMidi refs
+    const getIsPlaying = () => isPlayingRef.current;
+    const getIsPaused = () => playback.isPaused;
+    const getParsedMidi = () => parsedMidi;
     const handleSpacebar = (e: KeyboardEvent) => {
       // Ignore if focus is in an input, textarea, or select
       const tag = (e.target as HTMLElement)?.tagName;
@@ -1366,12 +1370,11 @@ function App() {
         return;
       if (e.code === "Space" || e.key === " " || e.key === "Spacebar") {
         e.preventDefault();
-        if (playback.isPlaying) {
+        if (getIsPlaying()) {
           handlePause();
-        } else if (playback.isPaused) {
+        } else if (getIsPaused()) {
           handleResume();
-        } else if (parsedMidi) {
-          // Always allow play if a MIDI file is loaded and not playing
+        } else if (getParsedMidi()) {
           handlePlay();
         }
       }
@@ -1558,25 +1561,27 @@ function App() {
                             exactMatch(file.name, drawerFilter.toLowerCase())
                         )
                         .map((file, idx) => (
-                          <li
-                            key={idx}
-                            className={`drawer-file-li${
-                              selectedMidiIdx === idx ? " selected" : ""
-                            }`}
-                            tabIndex={0}
-                            onClick={async () => {
-                              await handleSelectMidi(idx);
-                              handlePlay();
-                            }}
-                            onKeyDown={async (e) => {
-                              if (e.key === "Enter" || e.key === " ") {
-                                e.preventDefault();
+                          <li key={idx} className="drawer-file-li">
+                            <button
+                              className={`drawer-file-btn${
+                                selectedMidiIdx === idx ? " selected" : ""
+                              }`}
+                              tabIndex={0}
+                              onClick={() => handleSelectMidi(idx)}
+                              onDoubleClick={async () => {
                                 await handleSelectMidi(idx);
                                 handlePlay();
-                              }
-                            }}
-                          >
-                            {file.name}
+                              }}
+                              onKeyDown={async (e) => {
+                                if (e.key === "Enter" || e.key === " ") {
+                                  e.preventDefault();
+                                  await handleSelectMidi(idx);
+                                  handlePlay();
+                                }
+                              }}
+                            >
+                              {file.name}
+                            </button>
                           </li>
                         ))}
                     </ul>
