@@ -1156,7 +1156,6 @@ function App() {
     const tempoRatio = tempo / midiTempo;
     const duration = parsedMidi.duration / tempoRatio;
     const beatsPerBar = ts.numerator;
-    const beatUnit = ts.denominator;
     // Current time in seconds (scaled for current tempo)
     const currentTime = playheadNorm * duration;
     // Calculate total beats (quarter notes) at current tempo
