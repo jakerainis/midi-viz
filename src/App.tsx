@@ -1052,19 +1052,25 @@ function App() {
   };
 
   useEffect(() => {
-    // Preload a MIDI file from public/sample-midi
-    const midiUrl = "/sample-midi/138bpm - Power Up Double Bass 01.mid";
-    fetch(midiUrl)
-      .then((res) => res.arrayBuffer())
-      .then((arrayBuffer) => {
-        const midi = new Midi(arrayBuffer);
-        setParsedMidi(midi);
-        setMidiFiles([
-          new File([arrayBuffer], "138bpm - Power Up Double Bass 01.mid"),
-        ]);
-        setSelectedMidiIdx(0);
-      });
-    // No drum sample preload or mapping needed
+    // No uploaded files by default
+    setMidiFiles([]);
+    setSelectedMidiIdx(null);
+    setParsedMidi(null);
+    setSelectedPreloadedMidi(null);
+    setUiPlayhead(0);
+    dispatchPlayback({ type: "STOP" });
+    // Preload a MIDI file from public/sample-midi if desired (commented out)
+    // const midiUrl = "/sample-midi/138bpm - Power Up Double Bass 01.mid";
+    // fetch(midiUrl)
+    //   .then((res) => res.arrayBuffer())
+    //   .then((arrayBuffer) => {
+    //     const midi = new Midi(arrayBuffer);
+    //     setParsedMidi(midi);
+    //     setMidiFiles([
+    //       new File([arrayBuffer], "138bpm - Power Up Double Bass 01.mid"),
+    //     ]);
+    //     setSelectedMidiIdx(0);
+    //   });
   }, []);
 
   // Set tempo to MIDI file's tempo on load (embedded, filename, or fallback)
