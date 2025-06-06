@@ -1,5 +1,7 @@
 # Drum MIDI Preview Tool
 
+A fun "vibecode" project using GPT 4.1 agent.
+
 This project is a web-based tool built with React, TypeScript, and Vite for previewing drum-based MIDI files. It allows users to:
 
 - Upload a folder of .midi files and drum samples
