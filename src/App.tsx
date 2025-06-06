@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useReducer } from "react";
+import { useState, useRef, useEffect, useReducer, useMemo } from "react";
 import { Midi } from "@tonejs/midi";
 import * as Tone from "tone";
 import "./App.css";
@@ -338,7 +338,7 @@ function App() {
 
   // Subdivision state for timeline grid
   const [subdivision, setSubdivision] = useState(8); // default to 1/8th notes
-  const subdivisionOptions = [4, 8, 16, 32];
+  const subdivisionOptions = useMemo(() => [4, 8, 16, 32], []);
 
   // --- Draggable playhead state ---
   const [isDraggingPlayhead, setIsDraggingPlayhead] = useState(false);
@@ -709,42 +709,35 @@ function App() {
         .flatMap((track) => track.notes)
         .sort((a, b) => a.time - b.time);
       const effectiveStart = actualStartPosition ?? 0;
-      const scheduledNotes = allNotes.filter(
-        (note) =>
-          drumSampleUrls[note.midi] &&
-          samplerMap[note.midi] &&
-          note.time / tempoRatio >= effectiveStart
-      );
       const ids: number[] = [];
-      scheduledNotes.forEach((note) => {
+      allNotes.forEach((note) => {
         const noteTime = note.time / tempoRatio;
         const sampler = samplerMap[note.midi];
         if (!sampler) return;
+        if (noteTime < effectiveStart) return;
         try {
           const id = Tone.Transport.scheduleOnce((time) => {
+            // --- Real-time mute/solo check using refs ---
+            const midi = Number(note.midi);
+            const anySoloed = Object.values(soloedDrumsRef.current).some(
+              Boolean
+            );
+            if (
+              (anySoloed && !soloedDrumsRef.current[midi]) ||
+              (!anySoloed && mutedDrumsRef.current[midi])
+            ) {
+              // Muted or not soloed: skip triggering
+              return;
+            }
             try {
-              // Velocity is 0–1, pass as third arg to triggerAttack
-              // Map velocity 0 to gain 0.85, velocity 1 to gain 1.15 (subtle range)
-              const velocity = note.velocity ?? 1;
-              const gain = 0.5 * velocity;
-              // Use Tone.Gain to scale output
-              const gainNode = new Tone.Gain(gain).toDestination();
-              sampler.connect(gainNode);
-              sampler.triggerAttack("C3", time, velocity);
-              setTimeout(() => sampler.disconnect(gainNode), 500);
-            } catch (err) {
-              console.error(
-                `Error triggering sampler for note ${note.midi} at time ${time}:`,
-                err
-              );
+              sampler.triggerAttack("C3", time, note.velocity || 1);
+            } catch {
+              /* ignore */
             }
           }, noteTime);
           ids.push(id);
-        } catch (err) {
-          console.error(
-            `Error scheduling note ${note.midi} at time ${noteTime}:`,
-            err
-          );
+        } catch {
+          /* ignore */
         }
       });
       noteTimeoutsRef.current = ids;
@@ -857,6 +850,27 @@ function App() {
     // No need for wasPlaying/wasPaused checks, stopAllPlayback handles all cases
   };
 
+  // --- Mute/Solo state for drum rows ---
+  const [mutedDrums, setMutedDrums] = useState<Record<number, boolean>>({});
+  const [soloedDrums, setSoloedDrums] = useState<Record<number, boolean>>({});
+  const mutedDrumsRef = useRef(mutedDrums);
+  const soloedDrumsRef = useRef(soloedDrums);
+  useEffect(() => {
+    mutedDrumsRef.current = mutedDrums;
+  }, [mutedDrums]);
+  useEffect(() => {
+    soloedDrumsRef.current = soloedDrums;
+  }, [soloedDrums]);
+
+  // Toggle mute for a drum note
+  const handleToggleMute = (note: number) => {
+    setMutedDrums((prev) => ({ ...prev, [note]: !prev[note] }));
+  };
+  // Toggle solo for a drum note
+  const handleToggleSolo = (note: number) => {
+    setSoloedDrums((prev) => ({ ...prev, [note]: !prev[note] }));
+  };
+
   // Enhanced timeline rendering (HTML/CSS version, with separate label gutter)
   const renderTimeline = () => {
     if (!parsedMidi) {
@@ -934,21 +948,63 @@ function App() {
         velocity: noteObj.velocity,
       }))
     );
-    // Responsive timeline grid with separate label gutter
+    // --- Mute/Solo logic ---
+    const anySoloed = Object.values(soloedDrums).some(Boolean);
     return (
       <div className="timeline-html-wrapper">
         <div className="timeline-flex-row">
           {/* Drum row labels (left gutter) */}
           <div className="timeline-label-gutter">
-            {drumRows.map(([, label]) => (
-              <div
-                className="drum-row-label-gutter"
-                key={label}
-                style={{ height: rowHeight }}
-              >
-                {label}
-              </div>
-            ))}
+            {drumRows.map(([noteRaw, label]) => {
+              const note = Number(noteRaw);
+              const isMuted = !!mutedDrums[note];
+              const isSoloed = !!soloedDrums[note];
+              const anySoloed = Object.values(soloedDrums).some(Boolean);
+              // Mute button class logic:
+              // - If soloed, do not show 'active' on mute button for that drum
+              // - If any soloed, show 'active' on mute for non-soloed drums
+              // - If no soloed, show 'active' on mute for muted drums
+              let muteBtnClass = "timeline-mute-btn";
+              if (anySoloed) {
+                if (!isSoloed) muteBtnClass += " active muted";
+              } else if (isMuted) {
+                muteBtnClass += " active muted";
+              }
+              // Solo button class logic (unchanged)
+              let soloBtnClass = "timeline-solo-btn";
+              if (isSoloed) soloBtnClass += " soloed active";
+              return (
+                <div
+                  className="drum-row-label-gutter"
+                  key={label}
+                  style={{
+                    height: rowHeight,
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                >
+                  <span>{label}</span>
+                  <div className="track-controls">
+                    <button
+                      className={muteBtnClass}
+                      onClick={() => handleToggleMute(note)}
+                      title={isMuted ? "Unmute" : "Mute"}
+                      style={{ marginLeft: 8 }}
+                    >
+                      M
+                    </button>
+                    <button
+                      className={soloBtnClass}
+                      onClick={() => handleToggleSolo(note)}
+                      title={isSoloed ? "Unsolo" : "Solo"}
+                      style={{ marginLeft: 4 }}
+                    >
+                      S
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
           {/* Timeline grid, playhead, and hits */}
           <div
@@ -1012,25 +1068,41 @@ function App() {
             />
             {/* Drum rows and hits */}
             <div className="timeline-drum-rows">
-              {drumRows.map(([, label], idx) => (
-                <div
-                  className="drum-row"
-                  key={label}
-                  style={{ height: rowHeight }}
-                >
-                  <div className="drum-row-hits">
-                    {drumNotesByRow[idx].map((noteObj, i) => (
-                      <div
-                        key={i + "-note-" + idx}
-                        className="drum-hit"
-                        style={{
-                          left: `${(noteObj.time / maxTime) * 100}%`,
-                        }}
-                      />
-                    ))}
+              {drumRows.map(([noteRaw, label], idx) => {
+                const note = Number(noteRaw);
+                const rowNotes = drumNotesByRow[idx];
+                return (
+                  <div
+                    className="drum-row"
+                    key={label}
+                    style={{ height: rowHeight }}
+                  >
+                    <div className="drum-row-hits">
+                      {rowNotes.map((noteObj, i) => {
+                        const isNoteMuted =
+                          (anySoloed && !soloedDrums[note]) ||
+                          (!anySoloed && mutedDrums[note]);
+                        return (
+                          <div
+                            key={i + "-note-" + idx}
+                            className={`drum-hit${isNoteMuted ? " muted" : ""}`}
+                            style={{
+                              left: `${(noteObj.time / maxTime) * 100}%`,
+                              opacity: Math.max(
+                                0.2,
+                                Math.min(1, noteObj.velocity ?? 1)
+                              ),
+                              filter: isNoteMuted
+                                ? "grayscale(1) brightness(1.5) opacity(0.5)"
+                                : undefined,
+                            }}
+                          />
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>
@@ -1093,7 +1165,7 @@ function App() {
     if (parsedMidi) {
       setTempo(Math.round(getMidiTempo()));
     }
-  }, [parsedMidi]);
+  }, [parsedMidi, getMidiTempo]);
 
   // --- Controls Upper: Combine time signature and subdivision, rename class ---
   const ts = getTimeSignature();
@@ -1486,6 +1558,7 @@ function App() {
     tempo,
     handleTempoChange,
     drawerOpen,
+    subdivisionOptions,
   ]);
 
   // Stop and reset playback on window resize

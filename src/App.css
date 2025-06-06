@@ -338,10 +338,11 @@ button:disabled,
   color: var(--daw-text);
   display: flex;
   flex: 1 1 0;
+  flex-direction: column;
   font-size: 14px;
   font-weight: 500;
   height: 100%;
-  justify-content: flex-end;
+  justify-content: center;
   min-height: 0;
   padding: 0 12px 0 8px;
   width: 100%;
@@ -349,6 +350,18 @@ button:disabled,
 }
 .drum-row-label-gutter:first-child {
   margin-top: 12px;
+}
+.track-controls {
+  margin-top: 12px;
+}
+.track-controls button {
+  padding: 8px 12px;
+}
+.timeline-mute-btn.active {
+  background: var(--daw-accent2);
+}
+.timeline-solo-btn.active {
+  background: var(--daw-accent);
 }
 
 /* --- Timeline Grid Lines --- */
