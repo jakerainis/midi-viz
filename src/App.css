@@ -579,3 +579,148 @@ svg {
   pointer-events: none;
   padding-left: 0;
 }
+
+/* --- THEMED TEMPO SLIDER --- */
+.controls-lower__slider {
+  width: 220px;
+  height: 4px;
+  margin: 0 16px;
+  background: transparent;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  border-radius: 2px;
+  outline: none;
+  /* fallback for browsers that don't support custom styling */
+}
+
+/* Webkit browsers (Chrome, Safari, Edge Chromium) */
+.controls-lower__slider::-webkit-slider-runnable-track {
+  height: 6px;
+  background: var(--daw-panel-gradient, var(--daw-panel));
+  border-radius: 3px;
+  border: 1px solid var(--daw-border);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.12);
+}
+.controls-lower__slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--daw-accent2, var(--daw-accent));
+  border: 2px solid var(--daw-accent);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+  margin-top: -6px;
+  transition: background 0.2s, border 0.2s;
+}
+.controls-lower__slider:focus::-webkit-slider-thumb,
+.controls-lower__slider:hover::-webkit-slider-thumb {
+  background: var(--daw-accent);
+  border-color: var(--daw-accent2, var(--daw-accent));
+}
+
+/* Progress fill (left of thumb) for Webkit */
+.controls-lower__slider::-webkit-slider-thumb {
+  z-index: 2;
+  position: relative;
+}
+.controls-lower__slider::-webkit-slider-runnable-track {
+  background: linear-gradient(
+    to right,
+    var(--daw-accent) 0%,
+    var(--daw-accent) calc(var(--slider-progress, 0%) + 0.1%),
+    var(--daw-panel-gradient, var(--daw-panel)) calc(var(--slider-progress, 0%) + 0.1%),
+    var(--daw-panel-gradient, var(--daw-panel)) 100%
+  );
+}
+
+/* Firefox */
+.controls-lower__slider::-moz-range-track {
+  height: 6px;
+  background: var(--daw-panel-gradient, var(--daw-panel));
+  border-radius: 3px;
+  border: 1px solid var(--daw-border);
+}
+.controls-lower__slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--daw-accent2, var(--daw-accent));
+  border: 2px solid var(--daw-accent);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+  transition: background 0.2s, border 0.2s;
+}
+.controls-lower__slider:focus::-moz-range-thumb,
+.controls-lower__slider:hover::-moz-range-thumb {
+  background: var(--daw-accent);
+  border-color: var(--daw-accent2, var(--daw-accent));
+}
+
+/* Progress fill for Firefox */
+.controls-lower__slider::-moz-range-progress {
+  background-color: var(--daw-accent);
+  height: 6px;
+  border-radius: 3px;
+}
+.controls-lower__slider::-moz-range-track {
+  background: var(--daw-panel-gradient, var(--daw-panel));
+}
+
+/* IE/Edge */
+.controls-lower__slider::-ms-fill-lower {
+  background: var(--daw-accent);
+  border-radius: 3px;
+}
+.controls-lower__slider::-ms-fill-upper {
+  background: var(--daw-panel-gradient, var(--daw-panel));
+  border-radius: 3px;
+}
+.controls-lower__slider::-ms-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--daw-accent2, var(--daw-accent));
+  border: 2px solid var(--daw-accent);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+  transition: background 0.2s, border 0.2s;
+}
+.controls-lower__slider:focus::-ms-thumb,
+.controls-lower__slider:hover::-ms-thumb {
+  background: var(--daw-accent);
+  border-color: var(--daw-accent2, var(--daw-accent));
+}
+
+.controls-lower__slider:focus {
+  outline: 2px solid var(--daw-accent2, var(--daw-accent));
+  outline-offset: 2px;
+}
+
+/* Remove default focus for all browsers */
+.controls-lower__slider::-ms-tooltip {
+  display: none;
+}
+
+/* Hide outline for Chrome */
+.controls-lower__slider:focus {
+  outline: none;
+}
+
+/* Set slider progress variable dynamically (for Webkit) */
+.controls-lower__slider {
+  --slider-progress: calc(
+    (var(--value, 0) - var(--min, 30)) * 100 / (var(--max, 300) - var(--min, 30))
+  );
+}
+
+/* Optional: animate thumb on active */
+.controls-lower__slider:active::-webkit-slider-thumb {
+  box-shadow: 0 0 0 4px var(--daw-accent2, var(--daw-accent), 0.2);
+}
+
+/* For accessibility: increase hit area */
+.controls-lower__slider {
+  padding: 8px 0;
+}
+
+/* --- END THEMED TEMPO SLIDER --- */

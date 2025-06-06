@@ -724,7 +724,7 @@ function App() {
               // Velocity is 0–1, pass as third arg to triggerAttack
               // Map velocity 0 to gain 0.85, velocity 1 to gain 1.15 (subtle range)
               const velocity = note.velocity ?? 1;
-              const gain = 0.85 + 0.3 * velocity; // 0.85 (soft) to 1.15 (loud)
+              const gain = 0.5 * velocity;
               // Use Tone.Gain to scale output
               const gainNode = new Tone.Gain(gain).toDestination();
               sampler.connect(gainNode);
@@ -1198,6 +1198,131 @@ function App() {
   const [loopEnabled, setLoopEnabled] = useState(false);
   const handleToggleLoop = () => setLoopEnabled((prev) => !prev);
 
+  // --- DAW Theme Definitions ---
+  const DAW_THEMES = {
+    "Classic DAW": {
+      "--daw-bg": "#23272e",
+      "--daw-panel": "#2c313a",
+      "--daw-panel-gradient":
+        "linear-gradient(180deg, #353a43 0%, #23272e 100%)",
+      "--daw-border": "#444851",
+      "--daw-accent": "#ffb347",
+      "--daw-accent2": "#ff7f50",
+      "--daw-btn": "#23272e",
+      "--daw-btn-gradient": "linear-gradient(180deg, #353a43 0%, #23272e 100%)",
+      "--daw-btn-border": "#444851",
+      "--daw-btn-active": "#ffb347",
+      "--daw-btn-hover": "#ff7f50",
+      "--daw-loop": "#ff7f50",
+      "--daw-loop-inactive": "#888a8e",
+      "--daw-label": "#e0e0e0",
+      "--daw-timeline-grid": "#444851",
+      "--daw-timeline-bar": "#ffb347",
+      "--daw-timeline-playhead": "#ffb347",
+      "--daw-timeline-hit": "#ffb347",
+      "--daw-timeline-velocity": "#ffb347",
+    },
+    Ableton: {
+      "--daw-bg": "#1a1a1a",
+      "--daw-panel": "#232323",
+      "--daw-panel-gradient":
+        "linear-gradient(180deg, #232323 0%, #1a1a1a 100%)",
+      "--daw-border": "#333",
+      "--daw-accent": "#ffb347",
+      "--daw-accent2": "#ffe347",
+      "--daw-btn": "#232323",
+      "--daw-btn-gradient": "linear-gradient(180deg, #353535 0%, #232323 100%)",
+      "--daw-btn-border": "#444",
+      "--daw-btn-active": "#ffe347",
+      "--daw-btn-hover": "#ffb347",
+      "--daw-loop": "#ffe347",
+      "--daw-loop-inactive": "#888a8e",
+      "--daw-label": "#e0e0e0",
+      "--daw-timeline-grid": "#444",
+      "--daw-timeline-bar": "#ffe347",
+      "--daw-timeline-playhead": "#ffe347",
+      "--daw-timeline-hit": "#ffe347",
+      "--daw-timeline-velocity": "#ffe347",
+    },
+    Reaper: {
+      "--daw-bg": "#23272e",
+      "--daw-panel": "#2c2f36",
+      "--daw-panel-gradient":
+        "linear-gradient(180deg, #3a3d43 0%, #23272e 100%)",
+      "--daw-border": "#555a63",
+      "--daw-accent": "#7ed6df",
+      "--daw-accent2": "#22a6b3",
+      "--daw-btn": "#23272e",
+      "--daw-btn-gradient": "linear-gradient(180deg, #3a3d43 0%, #23272e 100%)",
+      "--daw-btn-border": "#555a63",
+      "--daw-btn-active": "#7ed6df",
+      "--daw-btn-hover": "#22a6b3",
+      "--daw-loop": "#22a6b3",
+      "--daw-loop-inactive": "#888a8e",
+      "--daw-label": "#e0e0e0",
+      "--daw-timeline-grid": "#555a63",
+      "--daw-timeline-bar": "#7ed6df",
+      "--daw-timeline-playhead": "#7ed6df",
+      "--daw-timeline-hit": "#7ed6df",
+      "--daw-timeline-velocity": "#7ed6df",
+    },
+    "FL Studio": {
+      "--daw-bg": "#23272e",
+      "--daw-panel": "#2c313a",
+      "--daw-panel-gradient":
+        "linear-gradient(180deg, #353a43 0%, #23272e 100%)",
+      "--daw-border": "#444851",
+      "--daw-accent": "#ffb347",
+      "--daw-accent2": "#ff7f50",
+      "--daw-btn": "#23272e",
+      "--daw-btn-gradient": "linear-gradient(180deg, #353a43 0%, #23272e 100%)",
+      "--daw-btn-border": "#444851",
+      "--daw-btn-active": "#ffb347",
+      "--daw-btn-hover": "#ff7f50",
+      "--daw-loop": "#ff7f50",
+      "--daw-loop-inactive": "#888a8e",
+      "--daw-label": "#e0e0e0",
+      "--daw-timeline-grid": "#444851",
+      "--daw-timeline-bar": "#ffb347",
+      "--daw-timeline-playhead": "#ffb347",
+      "--daw-timeline-hit": "#ffb347",
+      "--daw-timeline-velocity": "#ffb347",
+    },
+    "Logic Pro": {
+      "--daw-bg": "#22262a",
+      "--daw-panel": "#2a2e33",
+      "--daw-panel-gradient":
+        "linear-gradient(180deg, #2a2e33 0%, #22262a 100%)",
+      "--daw-border": "#3a3e43",
+      "--daw-accent": "#5edfff",
+      "--daw-accent2": "#b2bec3",
+      "--daw-btn": "#2a2e33",
+      "--daw-btn-gradient": "linear-gradient(180deg, #2a2e33 0%, #22262a 100%)",
+      "--daw-btn-border": "#3a3e43",
+      "--daw-btn-active": "#5edfff",
+      "--daw-btn-hover": "#b2bec3",
+      "--daw-loop": "#5edfff",
+      "--daw-loop-inactive": "#888a8e",
+      "--daw-label": "#e0e0e0",
+      "--daw-timeline-grid": "#3a3e43",
+      "--daw-timeline-bar": "#5edfff",
+      "--daw-timeline-playhead": "#5edfff",
+      "--daw-timeline-hit": "#5edfff",
+      "--daw-timeline-velocity": "#5edfff",
+    },
+  } as const;
+  type ThemeName = keyof typeof DAW_THEMES;
+  const THEME_NAMES = Object.keys(DAW_THEMES) as ThemeName[];
+  const [selectedTheme, setSelectedTheme] = useState<ThemeName>(THEME_NAMES[0]);
+  useEffect(() => {
+    const theme = DAW_THEMES[selectedTheme];
+    if (theme) {
+      Object.entries(theme).forEach(([key, value]) => {
+        document.documentElement.style.setProperty(key, value);
+      });
+    }
+  }, [selectedTheme]);
+
   return (
     <div className="app-root">
       {/* --- Persistent Drawer Toggle Button --- */}
@@ -1316,6 +1441,21 @@ function App() {
       {/* --- Main Content --- */}
       <div className="main-content">
         <div className="controls-upper">
+          {/* DAW Theme Selector */}
+          <span className="controls-upper__label">
+            <strong>Theme:</strong>
+            <select
+              className="controls-upper__select"
+              value={selectedTheme}
+              onChange={(e) => setSelectedTheme(e.target.value as ThemeName)}
+            >
+              {THEME_NAMES.map((name) => (
+                <option key={name} value={name}>
+                  {name}
+                </option>
+              ))}
+            </select>
+          </span>
           <span className="controls-upper__label">
             <strong>File: </strong>
             {selectedMidiIdx !== null && midiFiles[selectedMidiIdx]
