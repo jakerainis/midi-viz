@@ -1345,85 +1345,56 @@ function App() {
       <div className="main-content">
         <div className="controls-upper">
           <span className="controls-upper__label">
-            File:{" "}
+            <strong>File: </strong>
             {selectedMidiIdx !== null && midiFiles[selectedMidiIdx]
               ? midiFiles[selectedMidiIdx].name
+              : selectedPreloadedMidi
+              ? `${selectedPreloadedMidi.folder} / ${selectedPreloadedMidi.filename}`
               : "No MIDI file selected"}
           </span>
           <span className="controls-upper__label">
-            Time Signature: {ts.numerator}/{ts.denominator}
+            <strong>Time Signature: </strong>
+            {ts.numerator}/{ts.denominator}
           </span>
           <span className="controls-upper__label">
-            Default Tempo: {Math.round(midiDefaultTempo)} BPM
+            <strong>Default Tempo: </strong>
+            {Math.round(midiDefaultTempo)} BPM
           </span>
           <span className="controls-upper__label">
-            Position: {getPlayheadPositionLabel(uiPlayhead)}
+            <strong>Position: </strong>
+            {getPlayheadPositionLabel(uiPlayhead)}
           </span>
-          <span className="controls-upper__label">Subdivision:</span>
-          <select
-            className="controls-upper__select"
-            value={subdivision}
-            onChange={(e) => setSubdivision(Number(e.target.value))}
-          >
-            {subdivisionOptions.map((option) => (
-              <option key={option} value={option}>
-                1/{option}
-              </option>
-            ))}
-          </select>
+          <span className="controls-upper__label">
+            <strong>Subdivision:</strong>
+            <select
+              className="controls-upper__select"
+              value={subdivision}
+              onChange={(e) => setSubdivision(Number(e.target.value))}
+            >
+              {subdivisionOptions.map((option) => (
+                <option key={option} value={option}>
+                  1/{option}
+                </option>
+              ))}
+            </select>
+          </span>
         </div>
         <section className="timeline-section">{renderTimeline()}</section>
         <div className="controls-lower">
-          {/* --- DAW-style Tempo Stepper --- */}
-          <div className="tempo-stepper" title="Set playback tempo (BPM)">
-            <span className="tempo-stepper__label">Tempo</span>
+          <div className="tempo-slider">
+            <label htmlFor="tempo-slider" className="controls-lower__label">
+              Tempo: <b>{Math.round(tempo)} BPM</b>
+            </label>
             <input
-              className="tempo-stepper__input"
-              type="number"
+              id="tempo-slider"
+              type="range"
               min={30}
               max={300}
               value={tempo}
-              step={1}
-              onChange={(e) => {
-                let val = Number(e.target.value);
-                if (isNaN(val)) val = 120;
-                val = Math.max(30, Math.min(300, val));
-                handleTempoChange(val);
-              }}
-              aria-label="Tempo (BPM)"
+              onChange={(e) => handleTempoChange(Number(e.target.value))}
+              className="controls-lower__slider"
             />
-            <div className="tempo-stepper__buttons">
-              <button
-                className="tempo-stepper__btn"
-                tabIndex={-1}
-                onClick={() => handleTempoChange(Math.min(300, tempo + 1))}
-                aria-label="Increase tempo"
-                type="button"
-              >
-                ▲
-              </button>
-              <button
-                className="tempo-stepper__btn"
-                tabIndex={-1}
-                onClick={() => handleTempoChange(Math.max(30, tempo - 1))}
-                aria-label="Decrease tempo"
-                type="button"
-              >
-                ▼
-              </button>
-            </div>
-            <span
-              style={{
-                marginLeft: 10,
-                color: "var(--daw-accent2)",
-                fontWeight: 700,
-                fontSize: 15,
-              }}
-            >
-              BPM
-            </span>
           </div>
-          {/* --- End Tempo Stepper --- */}
           <button
             onClick={() => {
               if (playback.isPlaying) {
@@ -1448,7 +1419,7 @@ function App() {
           <button
             onClick={handleStop}
             disabled={!playback.isPlaying && !playback.isPaused}
-            className={`controls-lower__button controls-lower__button--stop$ {
+            className={`controls-lower__button controls-lower__button--stop ${
               !playback.isPlaying && !playback.isPaused
                 ? " controls-lower__button--disabled"
                 : ""
@@ -1458,7 +1429,7 @@ function App() {
           </button>
           <button
             onClick={handleToggleLoop}
-            className={`controls-lower__button${
+            className={`controls-lower__button loop-btn ${
               loopEnabled ? " controls-lower__button--active" : ""
             }`}
             title="Toggle timeline loop"
