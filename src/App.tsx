@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useReducer, useMemo } from "react";
+import { useState, useRef, useEffect, useReducer, useMemo, useCallback } from "react";
 import { Midi } from "@tonejs/midi";
 import * as Tone from "tone";
 import "./App.css";
@@ -1161,6 +1161,36 @@ function App() {
   ]);
 
   // Set tempo to MIDI file's tempo on load (embedded, filename, or fallback)
+  const getMidiTempo = useCallback(() => {
+    // 1. Embedded tempo
+    if (
+      parsedMidi &&
+      parsedMidi.header &&
+      Array.isArray(parsedMidi.header.tempos) &&
+      parsedMidi.header.tempos.length > 0 &&
+      typeof parsedMidi.header.tempos[0].bpm === "number"
+    ) {
+      return parsedMidi.header.tempos[0].bpm;
+    }
+    // 2. Try to parse BPM from filename (uploaded or preloaded)
+    let filename = "";
+    if (selectedMidiIdx !== null && midiFiles[selectedMidiIdx]) {
+      filename = midiFiles[selectedMidiIdx].name;
+    } else if (selectedPreloadedMidi) {
+      filename = selectedPreloadedMidi.filename;
+    }
+    // Regex: match leading integer (optionally followed by 'bpm')
+    const match = filename.match(/^\d{2,3}(?:bpm)?/i);
+    if (match && match[0]) {
+      const bpm = parseInt(match[0], 10);
+      if (!isNaN(bpm) && bpm > 30 && bpm < 400) {
+        return bpm;
+      }
+    }
+    // 3. Fallback
+    return 120;
+  }, [parsedMidi, selectedMidiIdx, midiFiles, selectedPreloadedMidi]);
+
   useEffect(() => {
     if (parsedMidi) {
       setTempo(Math.round(getMidiTempo()));
@@ -1283,37 +1313,6 @@ function App() {
       }
     }
     return { numerator: 4, denominator: 4 }; // default 4/4
-  }
-
-  // Helper to get MIDI tempo (with fallback and filename parsing)
-  function getMidiTempo() {
-    // 1. Embedded tempo
-    if (
-      parsedMidi &&
-      parsedMidi.header &&
-      Array.isArray(parsedMidi.header.tempos) &&
-      parsedMidi.header.tempos.length > 0 &&
-      typeof parsedMidi.header.tempos[0].bpm === "number"
-    ) {
-      return parsedMidi.header.tempos[0].bpm;
-    }
-    // 2. Try to parse BPM from filename (uploaded or preloaded)
-    let filename = "";
-    if (selectedMidiIdx !== null && midiFiles[selectedMidiIdx]) {
-      filename = midiFiles[selectedMidiIdx].name;
-    } else if (selectedPreloadedMidi) {
-      filename = selectedPreloadedMidi.filename;
-    }
-    // Regex: match leading integer (optionally followed by 'bpm')
-    const match = filename.match(/^(\d{2,3})(?:bpm)?/i);
-    if (match && match[1]) {
-      const bpm = parseInt(match[1], 10);
-      if (!isNaN(bpm) && bpm > 30 && bpm < 400) {
-        return bpm;
-      }
-    }
-    // 3. Fallback
-    return 120;
   }
 
   // --- Loop state ---
