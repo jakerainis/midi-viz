@@ -1,44 +1,44 @@
 :root {
-  --daw-bg: #181a1b;
-  --daw-panel: #23272e;
-  --daw-panel-alt: #17181e;
-  --daw-border: rgba(255, 255, 255, 0.07);
   --daw-accent: #0080ff;
   --daw-accent2: #43a047;
   --daw-accent3: #ff9900;
+  --daw-bg: #181a1b;
+  --daw-border: rgba(255, 255, 255, 0.07);
+  --daw-btn-active: #00ff0d;
+  --daw-btn-bg: #23272e;
+  --daw-btn-border: #333a;
+  --daw-btn-hover: #1976d2;
+  --daw-panel: #23272e;
+  --daw-panel-alt: #17181e;
+  --daw-shadow: 0 2px 12px #000a;
   --daw-text: #e0e0e0;
   --daw-text-dim: #b0b0b0;
-  --daw-btn-bg: #23272e;
-  --daw-btn-hover: #1976d2;
-  --daw-btn-active: #00ff0d;
-  --daw-btn-border: #333a;
-  --daw-shadow: 0 2px 12px #000a;
 }
 
 /* App Root Layout */
 .app-root {
-  height: 100vh;
-  width: 100vw;
-  overflow: hidden;
   display: flex;
   flex-direction: row;
-  background: var(--daw-bg);
-  position: relative;
-  padding: 0;
+  height: 100vh;
   margin: 0;
+  overflow: hidden;
+  padding: 0;
+  position: relative;
+  width: 100vw;
+  background: var(--daw-bg);
 }
 
 /* Drawer */
 .drawer {
-  height: 100vh;
-  background: var(--daw-panel);
-  box-shadow: var(--daw-shadow);
   border-right: 1.5px solid var(--daw-border);
-  position: relative;
-  z-index: 200;
+  box-shadow: var(--daw-shadow);
   display: flex;
   flex-direction: column;
+  height: 100vh;
+  background: var(--daw-panel);
   overflow: hidden;
+  position: relative;
+  z-index: 200;
   transition: width 0.2s cubic-bezier(0.4, 2, 0.6, 1);
   text-align: left;
 }
@@ -46,21 +46,22 @@
   min-width: 300px;
 }
 .drawer-content {
-  padding: 32px 18px 18px 18px;
-  overflow-y: auto;
-  height: 100%;
-  background: var(--daw-panel);
   color: var(--daw-text);
   display: flex;
   flex-direction: column;
+  flex: 1;
   gap: 24px;
+  height: 100%;
+  overflow-y: auto;
+  padding: 32px 18px 18px 18px;
+  background: var(--daw-panel);
 }
 .drawer-title {
-  color: var(--daw-text);
   font-size: 22px;
-  letter-spacing: 0.5px;
   font-weight: 700;
+  letter-spacing: 0.5px;
   margin: 0;
+  color: var(--daw-text);
 }
 .drawer-file-input {
   display: none;
@@ -147,29 +148,23 @@
   font-size: 15px;
 }
 .drawer-resize-handle {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 8px;
-  height: 100%;
   cursor: ew-resize;
+  height: 100%;
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 8px;
   z-index: 250;
   background: #0000;
 }
 
 /* Drawer Toggle Button */
 .drawer-toggle {
-  position: absolute;
-  top: 32px;
-  left: 0;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
   border: 1.5px solid #bbb;
+  border-radius: 50%;
   background: #fff;
   color: #222;
   box-shadow: 0 2px 8px #0002;
-  z-index: 500;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -177,6 +172,11 @@
   font-weight: 700;
   font-size: 18px;
   padding: 0;
+  position: absolute;
+  top: 32px;
+  left: 0;
+  width: 32px;
+  height: 32px;
   transition: left 0.2s;
 }
 .drawer-toggle.open {
@@ -185,76 +185,28 @@
 
 /* Main Content */
 .main-content {
+  display: flex;
+  flex-direction: column;
   flex: 1 1 0%;
   height: 100vh;
   min-height: 0;
   overflow: hidden;
-  display: flex;
-  flex-direction: column;
   position: relative;
 }
 .controls-upper {
-  flex: 0 0 auto;
-  width: 100%;
-  z-index: 10;
-  position: relative;
-  margin-bottom: 0;
-  background: var(--daw-panel-alt);
-  border-bottom: 1.5px solid var(--daw-border);
-  box-shadow: 0 2px 8px 0 #0002;
-}
-.timeline-section {
-  flex: 1 1 0%;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: stretch;
-  align-items: stretch;
-  overflow: auto;
-}
-.controls-lower {
-  flex: 0 0 auto;
-  width: 100%;
-  position: relative;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 100;
-  padding: 1.2em 0 1.2em 0;
-  display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 32px;
-  background: var(--daw-panel-alt);
-  border-top: 2px solid var(--daw-accent);
-  box-shadow: 0 -2px 16px #0002;
-}
-.main-content-inner {
-  flex: 1 1 0%;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  padding: 0;
-}
-
-/* Controls Upper (formerly timeline-subdivision-bar) */
-.controls-upper {
-  margin-bottom: 8px;
-  text-align: left;
-  margin: 0 auto;
-  padding-left: 32px;
-  display: flex;
-  align-items: center;
-  gap: 18px;
   background: linear-gradient(
     90deg,
     var(--daw-panel-alt) 80%,
     var(--daw-accent) 120%
   );
   border-bottom: 2px solid var(--daw-accent2);
-  box-shadow: 0 4px 24px 0 #0004;
   border-radius: 0 0 12px 12px;
+  box-shadow: 0 4px 24px 0 #0004;
+  display: flex;
+  gap: 24px;
+  height: auto;
+  margin: 0 auto;
   padding: 18px 32px 14px 32px;
 }
 .controls-upper__label {
@@ -264,121 +216,45 @@
   letter-spacing: 0.1px;
   margin-right: 12px;
 }
-.controls-upper__select {
-  background: var(--daw-panel);
-  color: var(--daw-text);
-  border: 1.5px solid var(--daw-accent2);
-  border-radius: 4px;
-  font-size: 15px;
-  padding: 4px 12px;
-  font-weight: 600;
-}
-
-/* Controls Bar */
-.controls-lower {
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 100;
-  padding: 1.2em 0 1.2em 0;
+.timeline-section {
   display: flex;
+  flex-direction: column;
+  flex: 1 1 0%;
+  height: auto;
+  min-height: 0;
+  overflow: auto;
+  justify-content: stretch;
+  align-items: stretch;
+}
+.controls-lower {
   align-items: center;
+  background: #23272e;
+  border: none;
+  border-radius: 0;
+  display: flex;
+  gap: 36px;
   justify-content: center;
-  gap: 32px;
-  background: linear-gradient(
-    90deg,
-    var(--daw-panel-alt) 80%,
-    var(--daw-accent2) 120%
-  );
-  border-top: 2.5px solid var(--daw-accent);
-  box-shadow: 0 -4px 24px #0004;
-  border-radius: 12px 12px 0 0;
-  padding: 18px 0 18px 0;
+  padding: 18px 0;
+  position: relative;
+  width: 100%;
+  z-index: 100;
 }
 .controls-lower__label {
   color: var(--daw-accent2);
   font-size: 19px;
   font-weight: 700;
-  margin-right: 12px;
   letter-spacing: 0.1px;
-}
-
-.controls-lower__slider {
-  width: 320px;
-  margin: 0 1.5em;
-  accent-color: var(--daw-accent);
-  background: var(--daw-panel);
-  border-radius: 4px;
-  height: 6px;
-  box-shadow: 0 1px 6px #0005;
-}
-.controls-lower__slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: var(--daw-accent);
-  border: 2.5px solid var(--daw-accent2);
-  box-shadow: 0 2px 8px var(--daw-accent2) 33;
-  cursor: pointer;
-  transition: background 0.15s, border 0.15s;
-}
-.controls-lower__slider:focus::-webkit-slider-thumb {
-  background: var(--daw-accent2);
-  border-color: var(--daw-accent);
-}
-.controls-lower__slider::-moz-range-thumb {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: var(--daw-accent);
-  border: 2.5px solid var(--daw-accent2);
-  box-shadow: 0 2px 8px var(--daw-accent2) 33;
-  cursor: pointer;
-  transition: background 0.15s, border 0.15s;
-}
-.controls-lower__slider:focus::-moz-range-thumb {
-  background: var(--daw-accent2);
-  border-color: var(--daw-accent);
-}
-.controls-lower__slider::-ms-thumb {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: var(--daw-accent);
-  border: 2.5px solid var(--daw-accent2);
-  box-shadow: 0 2px 8px var(--daw-accent2) 33;
-  cursor: pointer;
-  transition: background 0.15s, border 0.15s;
-}
-
-/* Hide default slider track for all browsers */
-.controls-lower__slider::-webkit-slider-runnable-track {
-  height: 6px;
-  background: var(--daw-panel);
-  border-radius: 4px;
-}
-.controls-lower__slider::-ms-fill-lower,
-.controls-lower__slider::-ms-fill-upper {
-  background: var(--daw-panel);
-  border-radius: 4px;
-}
-.controls-lower__slider::-moz-range-track {
-  height: 6px;
-  background: var(--daw-panel);
-  border-radius: 4px;
+  margin-right: 12px;
 }
 
 /* --- Button Icon Support --- */
 .controls-lower__button {
-  display: flex;
   align-items: center;
-  gap: 0.7em;
+  display: flex;
   font-size: 21px;
-  padding: 0.5em 2.2em;
-  border-radius: 0px;
   font-weight: 700;
+  gap: 0.7em;
+  padding: 0.5em 2.2em;
 }
 .controls-lower__button .icon {
   font-size: 1.3em;
@@ -387,18 +263,36 @@
 
 /* --- Drum Labels --- */
 .drum-row-label-gutter {
-  color: var(--daw-text);
+  align-items: center;
   background: var(--daw-panel);
   border-bottom: 1px solid var(--daw-border);
+  color: var(--daw-text);
+  display: flex;
+  flex: 1 1 0;
+  font-size: 14px;
+  font-weight: 500;
+  height: 100%;
+  justify-content: flex-end;
+  min-height: 0;
+  padding: 0 12px 0 8px;
+  width: 100%;
+  box-sizing: border-box;
+}
+.drum-row-label-gutter:first-child {
+  margin-top: 12px;
 }
 
 /* --- Timeline Grid Lines --- */
 .timeline-grid-line.bar {
   background: var(--daw-accent2);
+  min-height: 100%;
+  opacity: 0.5;
   width: 2.5px;
 }
 .timeline-grid-line.subdivision {
   background: var(--daw-accent);
+  min-height: 100%;
+  opacity: 0.25;
   width: 1.5px;
 }
 
@@ -435,9 +329,7 @@ button {
   background: #1976d2;
   color: #fff;
   border: none;
-  border-radius: 4px;
-  padding: 0.4em 1em;
-  margin-right: 0.5em;
+  border-radius: 0px;
   cursor: pointer;
   font-size: 1em;
   transition: background 0.2s;
@@ -464,16 +356,15 @@ svg {
 
 /* Timeline HTML Wrapper */
 .timeline-html-wrapper {
-  width: 100%;
-  margin: 0 auto;
-  position: relative;
-  overflow: hidden;
-  min-height: 320px;
   display: flex;
   flex-direction: column;
   flex-grow: 1;
-  justify-content: stretch;
   height: 100%;
+  margin: 0 auto;
+  min-height: 320px;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
 }
 
 .timeline-flex-row {
@@ -486,30 +377,28 @@ svg {
 }
 
 .timeline-label-gutter {
-  display: flex;
-  flex-direction: column;
   align-items: flex-end;
   background: var(--daw-panel);
   color: var(--daw-text-dim);
   border-right: 1.5px solid var(--daw-border);
-  z-index: 10;
+  display: flex;
+  flex-direction: column;
   height: 100%; /* Fill parent height */
   width: 220px;
 }
 
 .timeline-drum-rows {
-  position: relative;
-  width: 100%;
-  z-index: 5;
   display: flex;
   flex-direction: column;
-  height: 100%; /* Fill parent height */
+  height: 100%;
+  width: 100%;
+  z-index: 5;
 }
 .drum-row-label-gutter {
-  display: flex;
   align-items: center;
-  justify-content: flex-end;
+  display: flex;
   flex: 1 1 0;
+  justify-content: flex-end;
   min-height: 0;
   height: 100%;
   font-size: 14px;
@@ -525,23 +414,23 @@ svg {
 }
 
 .timeline-html-grid {
-  position: relative;
+  display: flex;
+  flex-direction: column;
   flex: 1 1 0%;
   min-width: 0;
   min-height: 200px;
   background: var(--daw-panel-alt);
   overflow: visible;
-  display: flex;
-  flex-direction: column;
   justify-content: stretch;
+  position: relative;
   height: 100%;
 }
 
 .timeline-grid-line {
+  pointer-events: none;
   position: absolute;
   top: 0;
   bottom: 0;
-  pointer-events: none;
   z-index: 4; /* Lower than drum hits */
 }
 .timeline-grid-line.bar {
@@ -557,10 +446,10 @@ svg {
   min-height: 100%;
 }
 .timeline-bar-label {
-  color: var(--daw-accent2);
   background: var(--daw-panel-alt);
-  padding: 0 2px;
   border-radius: 2px;
+  color: var(--daw-accent2);
+  padding: 0 2px;
   position: absolute;
   top: 0;
   left: 4px;
@@ -569,14 +458,14 @@ svg {
 }
 
 .timeline-playhead {
+  bottom: 0;
+  pointer-events: none;
   position: absolute;
   top: 0;
-  bottom: 0;
   width: 6px;
   background: var(--daw-accent3);
   border-radius: 4px;
   z-index: 10;
-  pointer-events: none;
   transition: opacity 0.1s;
 }
 
@@ -631,6 +520,9 @@ svg {
 
 /* Velocity Bar Chart */
 .timeline-velocity-bar-chart {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
   position: relative;
   margin-left: 220px; /* align with timeline grid, after label gutter */
   height: 150px;
@@ -639,20 +531,17 @@ svg {
   border-radius: 0 0 8px 8px;
   margin-top: 0;
   z-index: 2;
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
 }
 .velocity-bar {
-  position: absolute;
-  bottom: 0;
   background: var(--daw-accent2);
   opacity: 0.7;
+  position: absolute;
+  bottom: 0;
   width: 6px;
 }
 .velocity-label {
-  position: absolute;
   left: -210px;
+  position: absolute;
   top: 8px;
   font-size: 13px;
   color: var(--daw-accent2);
@@ -676,18 +565,30 @@ svg {
   gap: 24px;
 }
 .controls-lower {
+  align-items: center;
   background: #23272e;
+  background: linear-gradient(
+    90deg,
+    var(--daw-panel-alt) 80%,
+    var(--daw-accent2) 120%
+  );
   border: none;
   border-radius: 0;
-  box-shadow: 0 -2px 16px #0002;
-  padding: 18px 0 18px 0;
+  border-top: 2.5px solid var(--daw-accent);
+  box-shadow: 0 -4px 24px #0004, 0 -2px 16px #0002;
+  display: flex;
   gap: 36px;
+  justify-content: center;
+  padding: 18px 0;
+  position: relative;
+  width: 100%;
+  z-index: 100;
 }
 
 /* Tempo Control */
 .tempo-control {
-  display: flex;
   align-items: center;
+  display: flex;
   gap: 0.7em;
   background: var(--daw-panel);
   border-radius: 8px;
@@ -702,18 +603,18 @@ svg {
   margin-right: 0.5em;
 }
 .tempo-control__input {
-  width: 64px;
-  font-size: 1.5em;
-  font-family: inherit;
-  background: var(--daw-panel-alt);
-  color: var(--daw-accent);
   border: 2px solid var(--daw-accent);
   border-radius: 6px;
-  text-align: center;
+  box-shadow: 0 1px 6px #0005;
+  color: var(--daw-accent);
+  font-family: inherit;
+  font-size: 1.5em;
   font-weight: 700;
   outline: none;
-  box-shadow: 0 1px 6px #0005;
+  padding: 0;
+  text-align: center;
   transition: border 0.15s, color 0.15s;
+  width: 64px;
 }
 .tempo-control__input:focus {
   border-color: var(--daw-accent2);
@@ -725,12 +626,10 @@ svg {
   gap: 2px;
 }
 .tempo-control__button {
-  width: 28px;
-  height: 28px;
+  border: 1.5px solid var(--daw-btn-border);
   border-radius: 50%;
   background: var(--daw-btn-bg);
   color: var(--daw-accent);
-  border: 1.5px solid var(--daw-btn-border);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -739,6 +638,8 @@ svg {
   transition: background 0.15s, color 0.15s, border 0.15s;
   box-shadow: 0 1px 4px #0002;
   padding: 0;
+  width: 28px;
+  height: 28px;
 }
 .tempo-control__button:hover {
   background: var(--daw-accent);
@@ -753,36 +654,36 @@ svg {
 
 /* --- Tempo Stepper Control --- */
 .tempo-stepper {
-  display: flex;
   align-items: center;
   background: var(--daw-panel);
   border: 2px solid var(--daw-accent2);
   border-radius: 8px;
   box-shadow: 0 2px 8px #0004;
-  padding: 0 10px;
-  height: 48px;
+  display: flex;
   gap: 0.5em;
+  height: 48px;
+  padding: 0 10px;
 }
 .tempo-stepper__label {
   color: var(--daw-accent2);
   font-size: 17px;
   font-weight: 700;
-  margin-right: 10px;
   letter-spacing: 0.1px;
+  margin-right: 10px;
 }
 .tempo-stepper__input {
-  width: 64px;
   background: var(--daw-panel-alt);
-  color: var(--daw-text);
   border: 2px solid var(--daw-accent);
   border-radius: 6px;
+  box-shadow: 0 1px 4px #0003;
+  color: var(--daw-text);
   font-size: 22px;
   font-weight: 700;
-  text-align: center;
-  outline: none;
-  transition: border 0.15s, box-shadow 0.15s;
-  box-shadow: 0 1px 4px #0003;
   margin-right: 0.5em;
+  outline: none;
+  text-align: center;
+  transition: border 0.15s, box-shadow 0.15s;
+  width: 64px;
 }
 .tempo-stepper__input:focus {
   border-color: var(--daw-accent3);
@@ -794,31 +695,31 @@ svg {
   gap: 2px;
 }
 .tempo-stepper__btn {
+  align-items: center;
   background: var(--daw-btn-bg);
-  color: var(--daw-accent);
   border: 1.5px solid var(--daw-btn-border);
   border-radius: 4px;
-  width: 32px;
-  height: 22px;
+  box-shadow: 0 1px 4px #0002;
+  color: var(--daw-accent);
+  cursor: pointer;
   display: flex;
-  align-items: center;
-  justify-content: center;
   font-size: 18px;
   font-weight: 700;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s, border 0.15s;
-  box-shadow: 0 1px 4px #0002;
+  height: 22px;
+  justify-content: center;
   padding: 0;
+  transition: background 0.15s, color 0.15s, border 0.15s;
+  width: 32px;
 }
 .tempo-stepper__btn:active {
   background: var(--daw-accent);
-  color: #fff;
   border-color: var(--daw-accent3);
+  color: #fff;
 }
 .tempo-stepper__btn:hover:not(:active) {
   background: var(--daw-accent2);
-  color: #fff;
   border-color: var(--daw-accent2);
+  color: #fff;
 }
 
 /* Responsive: shrink input and buttons on small screens */
@@ -828,12 +729,12 @@ svg {
     padding: 0 4px;
   }
   .tempo-stepper__input {
-    width: 44px;
     font-size: 16px;
+    width: 44px;
   }
   .tempo-stepper__btn {
-    width: 22px;
-    height: 16px;
     font-size: 13px;
+    height: 16px;
+    width: 22px;
   }
 }
