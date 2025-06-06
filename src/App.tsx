@@ -1156,16 +1156,17 @@ function App() {
     const tempoRatio = tempo / midiTempo;
     const duration = parsedMidi.duration / tempoRatio;
     const beatsPerBar = ts.numerator;
-    // Current time in seconds
+    const beatUnit = ts.denominator;
+    // Current time in seconds (scaled for current tempo)
     const currentTime = playheadNorm * duration;
-    // Current beat (float)
-    const currentBeat = currentTime / (60 / midiTempo);
+    // Calculate total beats (quarter notes) at current tempo
+    const totalBeats = currentTime / (60 / midiTempo);
     // Measure (1-based)
-    const measure = Math.floor(currentBeat / beatsPerBar) + 1;
+    const measure = Math.floor(totalBeats / beatsPerBar) + 1;
     // Beat within measure (1-based)
-    const beatInMeasure = Math.floor(currentBeat % beatsPerBar) + 1;
+    const beatInMeasure = Math.floor(totalBeats % beatsPerBar) + 1;
     // Subdivision within beat (1-based)
-    const beatFraction = currentBeat % 1;
+    const beatFraction = totalBeats - Math.floor(totalBeats);
     const subdivisionCount = subdivision;
     const subdivisionInBeat = Math.floor(beatFraction * subdivisionCount) + 1;
     return `${measure}.${beatInMeasure}.${subdivisionInBeat}`;
@@ -1384,6 +1385,17 @@ function App() {
     handleResume,
     parsedMidi,
   ]);
+
+  // Stop and reset playback on window resize
+  useEffect(() => {
+    const handleResize = () => {
+      stopAllPlayback();
+      dispatchPlayback({ type: "STOP" });
+      setUiPlayhead(0);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   return (
     <div className="app-root">
