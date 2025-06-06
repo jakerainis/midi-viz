@@ -724,3 +724,33 @@ svg {
 }
 
 /* --- END THEMED TEMPO SLIDER --- */
+
+/* --- Responsive Main Content Scroll --- */
+@media (max-width: 1600px) {
+  .main-content {
+    overflow-x: auto;
+    width: 100%;
+    min-width: 0;
+  }
+  .main-content > * {
+    min-width: 1600px;
+  }
+  /* Remove timeline-specific scroll/min-width */
+  .timeline-html-wrapper {
+    overflow-x: unset;
+  }
+  .timeline-html-grid {
+    min-width: 0;
+  }
+}
+
+@media (min-width: 1600px) {
+  .main-content {
+    min-width: 0;
+    width: 100%;
+    overflow-x: unset;
+  }
+  .main-content > * {
+    min-width: 0;
+  }
+}
