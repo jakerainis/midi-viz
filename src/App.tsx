@@ -235,7 +235,6 @@ function App() {
   const [parsedMidi, setParsedMidi] = useState<Midi | null>(null);
   const [selectedMidiIdx, setSelectedMidiIdx] = useState<number | null>(null);
   const playheadRef = useRef<number | null>(null);
-  const playersRef = useRef<Record<number, Tone.Player>>({});
   const noteTimeoutsRef = useRef<number[]>([]);
 
   // Add a stoppedRef to robustly control animation frame scheduling
@@ -536,16 +535,16 @@ function App() {
       noteTimeoutsRef.current = [];
     }
     // Stop and dispose all players
-    Object.values(playersRef.current).forEach((player) => {
-      try {
-        player.stop("+0");
-        player.disconnect();
-        player.dispose();
-      } catch {
-        /* ignore */
-      }
-    });
-    playersRef.current = {};
+    // Object.values(playersRef.current).forEach((player) => {
+    //   try {
+    //     player.stop("+0");
+    //     player.disconnect();
+    //     player.dispose();
+    //   } catch {
+    //     /* ignore */
+    //   }
+    // });
+    // playersRef.current = {};
     // Clear playback state
     if (playheadRefWithAnimation.playbackState) {
       playheadRefWithAnimation.playbackState = undefined;
@@ -660,50 +659,33 @@ function App() {
       Tone.Transport.stop();
       Tone.Transport.bpm.value = tempo;
 
-      // Create a new players object
-      const players: Record<number, Tone.Player> = {};
-      playersRef.current = players;
+      // --- Polyphonic Drum Playback: Use Tone.Sampler for each drum note ---
+      // Build a map of drum note -> sample URL
+      const drumSampleUrls: Record<number, string> = {};
+      Object.keys(DRUM_SAMPLE_MAP).forEach((midi) => {
+        drumSampleUrls[Number(midi)] = `/drums/${
+          DRUM_SAMPLE_MAP[Number(midi)]
+        }`;
+      });
 
-      // Pre-load all unique samples from DRUM_SAMPLE_MAP actually used in the MIDI
+      // Preload all unique samplers for used drum notes
       const usedNotes = new Set(
         parsedMidi.tracks.flatMap((track) => track.notes.map((n) => n.midi))
       );
-      const uniqueSampleNames = Array.from(
-        new Set(
-          Array.from(usedNotes)
-            .map((note) => DRUM_SAMPLE_MAP[note])
-            .filter(Boolean)
-        )
-      );
-      const sampleBuffers: Record<string, Tone.ToneAudioBuffer> = {};
-      const loadPromises = uniqueSampleNames.map(async (sampleName) => {
-        const url = `/drums/${sampleName}`;
-        try {
-          const buffer = new Tone.ToneAudioBuffer();
-          await buffer.load(url);
-          sampleBuffers[sampleName] = buffer;
-        } catch (err) {
-          console.error(`Failed to load sample: ${sampleName}`, err);
+      const samplerMap: Record<number, Tone.Sampler> = {};
+      const samplerPromises = Array.from(usedNotes).map(async (note) => {
+        const sampleUrl = drumSampleUrls[note];
+        if (!sampleUrl) return;
+        const sampler = new Tone.Sampler({
+          C3: sampleUrl,
+        }).toDestination();
+        // Wait for the sample to load (Tone.Sampler exposes a 'loaded' property)
+        while (!sampler.loaded) {
+          await new Promise((resolve) => setTimeout(resolve, 10));
         }
+        samplerMap[note] = sampler;
       });
-      await Promise.allSettled(loadPromises);
-
-      // Create players for each note
-      for (const note of usedNotes) {
-        const sampleName = DRUM_SAMPLE_MAP[note];
-        if (!sampleName || !sampleBuffers[sampleName]) continue;
-        try {
-          const player = new Tone.Player();
-          player.buffer = sampleBuffers[sampleName];
-          player.toDestination();
-          players[note] = player;
-        } catch (err) {
-          console.error(
-            `Error creating player for note ${note} with sample ${sampleName}:`,
-            err
-          );
-        }
-      }
+      await Promise.all(samplerPromises);
 
       // Store the start time and original tempo for more accurate playhead animation
       const playbackState: PlaybackState = {
@@ -720,49 +702,41 @@ function App() {
       // Set up accurate playhead animation with requestAnimationFrame
       // let animationFrame: number; // Removed, now managed on playheadRefWithAnimation
 
-      // Schedule all notes
-      // First collect and sort all notes across all tracks
+      // --- Schedule all notes using Tone.Transport and Sampler.triggerAttack ---
       const allNotes = parsedMidi.tracks
         .flatMap((track) => track.notes)
         .sort((a, b) => a.time - b.time);
       const effectiveStart = actualStartPosition ?? 0;
       const scheduledNotes = allNotes.filter(
         (note) =>
-          DRUM_SAMPLE_MAP[note.midi] &&
-          playersRef.current[note.midi] &&
+          drumSampleUrls[note.midi] &&
+          samplerMap[note.midi] &&
           note.time / tempoRatio >= effectiveStart
       );
-
-      console.log(
-        `Scheduling ${scheduledNotes.length}/${allNotes.length} notes with valid mappings`
-      );
-
-      // Schedule each note using Tone.Transport for precise timing
       const ids: number[] = [];
       scheduledNotes.forEach((note) => {
         const noteTime = note.time / tempoRatio;
-        const player = players[note.midi];
-
-        if (!player || !player.buffer || !player.buffer.loaded) {
-          console.warn(
-            `Skipping note ${note.midi} at time ${noteTime}s - player or buffer not ready`
-          );
-          return;
-        }
-
+        const sampler = samplerMap[note.midi];
+        if (!sampler) return;
         try {
-          // Schedule the note using the transport
           const id = Tone.Transport.scheduleOnce((time) => {
             try {
-              player.start(time);
+              // Velocity is 0–1, pass as third arg to triggerAttack
+              // Map velocity 0 to gain 0.85, velocity 1 to gain 1.15 (subtle range)
+              const velocity = note.velocity ?? 1;
+              const gain = 0.85 + 0.3 * velocity; // 0.85 (soft) to 1.15 (loud)
+              // Use Tone.Gain to scale output
+              const gainNode = new Tone.Gain(gain).toDestination();
+              sampler.connect(gainNode);
+              sampler.triggerAttack("C3", time, velocity);
+              setTimeout(() => sampler.disconnect(gainNode), 500);
             } catch (err) {
               console.error(
-                `Error starting player for note ${note.midi} at time ${time}:`,
+                `Error triggering sampler for note ${note.midi} at time ${time}:`,
                 err
               );
             }
           }, noteTime);
-
           ids.push(id);
         } catch (err) {
           console.error(
@@ -771,8 +745,6 @@ function App() {
           );
         }
       });
-
-      // Store ids for cleanup
       noteTimeoutsRef.current = ids;
 
       // Start the transport at the correct position
@@ -1348,8 +1320,6 @@ function App() {
             <strong>File: </strong>
             {selectedMidiIdx !== null && midiFiles[selectedMidiIdx]
               ? midiFiles[selectedMidiIdx].name
-              : selectedPreloadedMidi
-              ? `${selectedPreloadedMidi.folder} / ${selectedPreloadedMidi.filename}`
               : "No MIDI file selected"}
           </span>
           <span className="controls-upper__label">
