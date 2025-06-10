@@ -1,4 +1,11 @@
-import { useState, useRef, useEffect, useReducer, useMemo, useCallback } from "react";
+import {
+  useState,
+  useRef,
+  useEffect,
+  useReducer,
+  useMemo,
+  useCallback,
+} from "react";
 import { Midi } from "@tonejs/midi";
 import * as Tone from "tone";
 import "./App.css";
@@ -1272,6 +1279,20 @@ function App() {
   // --- Controls Upper: Add MIDI file's default tempo ---
   const midiDefaultTempo = getMidiTempo();
 
+  // --- Download link state for loaded MIDI file ---
+  const [uploadedMidiUrl, setUploadedMidiUrl] = useState<string | null>(null);
+  useEffect(() => {
+    if (selectedMidiIdx !== null && midiFiles[selectedMidiIdx]) {
+      const url = URL.createObjectURL(midiFiles[selectedMidiIdx]);
+      setUploadedMidiUrl(url);
+      return () => {
+        URL.revokeObjectURL(url);
+      };
+    } else {
+      setUploadedMidiUrl(null);
+    }
+  }, [selectedMidiIdx, midiFiles]);
+
   // --- Controls Upper: Add playhead position display ---
   // Helper to get playhead position as measure.beat.subdivision
   function getPlayheadPositionLabel(playheadNorm: number) {
@@ -1785,11 +1806,42 @@ function App() {
           </span>
           <span className="controls-upper__label">
             <strong>File: </strong>
-            {selectedMidiIdx !== null && midiFiles[selectedMidiIdx]
-              ? midiFiles[selectedMidiIdx].name
-              : selectedPreloadedMidi
-              ? selectedPreloadedMidi.filename
-              : "No MIDI file selected"}
+            {selectedMidiIdx !== null &&
+            midiFiles[selectedMidiIdx] &&
+            uploadedMidiUrl ? (
+              <a
+                href={uploadedMidiUrl}
+                download={midiFiles[selectedMidiIdx].name}
+                style={{
+                  color: "var(--daw-accent)",
+                  textDecoration: "underline",
+                  cursor: "pointer",
+                }}
+                title={`Download ${midiFiles[selectedMidiIdx].name}`}
+              >
+                {midiFiles[selectedMidiIdx].name}
+              </a>
+            ) : selectedPreloadedMidi ? (
+              <a
+                href={`/midi/${selectedPreloadedMidi.folder
+                  .split("/")
+                  .map(encodeURIComponent)
+                  .join("/")}/${encodeURIComponent(
+                  selectedPreloadedMidi.filename
+                )}`}
+                download={selectedPreloadedMidi.filename}
+                style={{
+                  color: "var(--daw-accent)",
+                  textDecoration: "underline",
+                  cursor: "pointer",
+                }}
+                title={`Download ${selectedPreloadedMidi.filename}`}
+              >
+                {selectedPreloadedMidi.filename}
+              </a>
+            ) : (
+              "No MIDI file selected"
+            )}
           </span>
           <span className="controls-upper__label">
             <strong>Time Signature: </strong>
