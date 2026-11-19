@@ -1,3 +1,1 @@
-<!-- Use this file to provide workspace-specific custom instructions to Copilot. For more details, visit https://code.visualstudio.com/docs/copilot/copilot-customization#_use-a-githubcopilotinstructionsmd-file -->
-
-This project is a React + Vite web app for previewing drum-based MIDI files. It uses @tonejs/midi for MIDI parsing and Tone.js for audio playback and scheduling. Focus on MIDI file upload, drum sample mapping, timeline visualization, tempo control, and playback features.
+This is midi-viz, a React 19 + TypeScript + Vite drum-MIDI arranger. MIDI is parsed with @tonejs/midi; audio is a custom Web Audio engine (src/audio/engine.ts, voices.ts) scheduling in ticks through a tempo map. State is a zustand store with undo (src/state). The default drum kit is static files in public/kits (CrocellKit, CC BY 4.0); users can load their own kits into IndexedDB. See README.md.

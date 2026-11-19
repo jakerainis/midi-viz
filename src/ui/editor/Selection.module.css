@@ -1,0 +1,243 @@
+.view {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+}
+
+.main {
+  flex: 1 1 560px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  padding: 8px 12px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+}
+
+.crumbs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.crumbs h1 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.crumb {
+  border: 0;
+  padding: 0;
+  background: none;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.crumb:hover {
+  color: var(--text);
+}
+
+.linked {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.tools > button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+}
+
+.tools kbd {
+  font-size: 10px;
+  color: var(--dim);
+}
+
+.label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  background: var(--bg);
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  padding: 8px 12px;
+  background: var(--panel);
+  border-top: 1px solid var(--line);
+}
+
+.footGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.footLabel {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.footNote {
+  flex: 1 1 260px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.sq {
+  width: 28px;
+  padding: 0;
+}
+
+.side {
+  flex: 0 1 280px;
+  min-width: 240px;
+  background: var(--panel);
+  border-left: 1px solid var(--line);
+  overflow: auto;
+}
+
+@media (max-width: 1000px) {
+  .side {
+    display: none;
+  }
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 14px;
+  min-height: 100%;
+}
+
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.title {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.muted {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.muted kbd {
+  color: var(--text);
+}
+
+.ops > button {
+  flex: 1;
+}
+
+.fields {
+  display: flex;
+  gap: 8px;
+}
+
+.fields label,
+.fieldCol {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.fields input {
+  width: 100%;
+}
+
+.layers {
+  display: flex;
+  gap: 2px;
+  height: 18px;
+}
+
+.layer {
+  border-radius: 2px;
+}
+
+.layerScale {
+  display: flex;
+  justify-content: space-between;
+  font: 11px var(--mono);
+  color: var(--dim);
+}
+
+.actions {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.help {
+  margin: 0;
+  padding-left: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.help b {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.empty {
+  flex: 1;
+  padding: 40px;
+}
+
+.empty h1 {
+  margin: 0 0 8px;
+  font-size: 17px;
+}
+
+.empty p {
+  color: var(--muted);
+}
+
+.clipList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: 800px;
+}

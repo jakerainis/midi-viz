@@ -1,0 +1,190 @@
+.pane {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+  border-top: 1px solid var(--line-strong);
+}
+
+.focused {
+  box-shadow: inset 0 2px 0 color-mix(in srgb, var(--accent) 75%, transparent);
+}
+
+/* ---- header ---- */
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  padding: 7px 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.title {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+  margin-right: 4px;
+}
+
+.title h2 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: text;
+  color: var(--text-strong);
+}
+
+.title input {
+  height: 26px;
+  width: 180px;
+}
+
+.muted {
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.tools > button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 24px;
+}
+
+@media (max-width: 1500px) {
+  .toolName {
+    display: none;
+  }
+}
+
+.label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.stepper :global(.btn) {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+}
+
+.stepper span {
+  min-width: 52px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text);
+}
+
+/* ---- grid ---- */
+
+.scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  background: var(--bg);
+}
+
+/* ---- footer (same controls as the timeline's) ---- */
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  padding: 7px 12px;
+  border-top: 1px solid var(--line);
+  background: var(--panel);
+}
+
+.footGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.footLabel {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.sq {
+  width: 28px;
+  padding: 0;
+}
+
+.strip {
+  flex: 1 1 220px;
+  position: relative;
+  height: 30px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  overflow: hidden;
+  cursor: pointer;
+  user-select: none;
+  touch-action: none;
+}
+
+.stripMini {
+  position: absolute;
+  inset: 3px 0;
+  --clip-tick: var(--text-2);
+  pointer-events: none;
+}
+
+.stripMini :global(svg) {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.stripWindow {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border: 1.5px solid color-mix(in srgb, var(--text) 75%, transparent);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--text) 6%, transparent);
+  cursor: grab;
+}
+
+.stripEdge {
+  position: absolute;
+  top: 5px;
+  bottom: 5px;
+  width: 5px;
+  border-radius: 2px;
+  background: var(--text);
+  cursor: ew-resize;
+}
+
+/* ---- empty ---- */
+
+.empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 18px 20px;
+  font-size: 13px;
+}
+
+.empty p {
+  margin: 0;
+}

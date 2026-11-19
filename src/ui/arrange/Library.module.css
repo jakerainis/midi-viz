@@ -1,0 +1,257 @@
+.lib {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.head h2 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 10px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  flex: none;
+}
+
+.search:focus-within {
+  border-color: var(--select);
+}
+
+.search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  flex: none;
+}
+
+.chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 8px;
+  border: 1px solid var(--control-line);
+  border-radius: 13px;
+  background: var(--raised);
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.chip span {
+  color: var(--muted);
+}
+
+.chipAdd {
+  border-style: dashed;
+  background: transparent;
+  color: var(--muted);
+}
+
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+}
+
+.pop {
+  position: absolute;
+  z-index: 41;
+  top: 32px;
+  left: 0;
+  width: 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  background: var(--panel);
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
+.popRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.popRow input {
+  width: 0;
+  flex: 1;
+}
+
+.tree {
+  flex: 1 1 auto;
+  min-height: 80px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin: 0 -4px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  flex: none;
+  padding-right: 8px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--text-2);
+  font-size: 12px;
+  text-align: left;
+  width: 100%;
+}
+
+.row:hover {
+  background: var(--raised);
+}
+
+.rowActive,
+.rowActive:hover {
+  background: var(--pressed);
+  color: var(--text-strong);
+}
+
+.rowLabel {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.meta {
+  font: 500 11px var(--mono);
+  color: var(--muted);
+  flex: none;
+}
+
+.group {
+  padding: 8px 8px 2px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.count,
+.empty {
+  margin: 4px 8px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.card {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  background: var(--raised);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.cardTop {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cardPlay {
+  width: 28px;
+  height: 28px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 14px;
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.cardText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.cardName {
+  font-size: 12px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cardSub {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.cardMini {
+  position: relative;
+  height: 30px;
+  padding: 3px 0;
+  background: var(--bg);
+  border-radius: 4px;
+  overflow: hidden;
+  --clip-tick: var(--text);
+}
+
+.cardMini svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.cardLine {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1.5px;
+  background: var(--accent);
+}
+
+.hint {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.hint kbd {
+  color: var(--text);
+}

@@ -1,0 +1,388 @@
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  min-height: 56px;
+  padding: 8px 14px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+  flex: none;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.project {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--raised);
+  font-size: 13px;
+  font-weight: 500;
+  max-width: 220px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.saved {
+  font-size: 11px;
+  color: var(--dim);
+  min-width: 40px;
+}
+
+@media (max-width: 1500px) {
+  .saved {
+    display: none;
+  }
+}
+
+.tabs {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.tabs button {
+  height: 30px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.tabs button[aria-current='page'] {
+  background: var(--pressed);
+  color: var(--text-strong);
+}
+
+.transport {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.transport :global(.icon-btn) {
+  color: var(--text);
+}
+
+.transport :global(.icon-btn[aria-pressed='false']) {
+  color: var(--muted);
+}
+
+.play {
+  width: 40px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 6px;
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.lcd {
+  display: flex;
+  align-items: stretch;
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-family: var(--mono);
+}
+
+.lcd > div:first-child {
+  border-radius: 5px 0 0 5px;
+}
+
+.lcd > div:last-child {
+  border-radius: 0 5px 5px 0;
+}
+
+.lcd > div {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 3px 12px;
+  background: var(--bg);
+}
+
+.big {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.small {
+  font-size: 11px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.kit {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: transparent;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.kit svg {
+  color: var(--muted);
+}
+
+.spacer {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.right {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.help {
+  font: 600 14px var(--mono);
+}
+
+.export {
+  height: 36px;
+  padding: 0 14px;
+  margin-left: 6px;
+  font-size: 13px;
+}
+
+.menuWrap {
+  position: relative;
+}
+
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+}
+
+.menu {
+  position: absolute;
+  z-index: 41;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  padding: 6px;
+  background: var(--panel);
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
+.menuRight {
+  left: auto;
+  right: 0;
+}
+
+.menu > button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 30px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  text-align: left;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.menu > button:hover {
+  background: var(--raised);
+}
+
+.menu > button[aria-checked='true'] {
+  background: var(--pressed);
+}
+
+.menu hr {
+  width: 100%;
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: 6px 0;
+}
+
+.swatches {
+  display: flex;
+  gap: 8px;
+  padding: 4px 10px 6px;
+}
+
+.swatches button {
+  width: 22px;
+  height: 22px;
+  border-radius: 11px;
+  border: 2px solid transparent;
+}
+
+.swatches button[aria-pressed='true'] {
+  border-color: var(--text);
+}
+
+.lcdTempo {
+  position: relative;
+  padding: 0 !important;
+}
+
+.lcdBtn {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 3px 12px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+
+.lcdBtn:hover {
+  background: var(--raised);
+}
+
+.tempoPop {
+  width: 300px;
+  gap: 8px;
+  padding: 12px;
+  font-family: var(--font);
+}
+
+.tempoRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+}
+
+.tempoRow > span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tempoRow input {
+  width: 84px;
+  height: 32px;
+  font-size: 14px;
+}
+
+.tempoSub {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.tempoActions {
+  display: flex;
+  gap: 6px;
+}
+
+.tempoActions :global(.btn) {
+  flex: 1;
+}
+
+.tempoItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  padding: 0 4px;
+}
+
+.tempoItem .mono {
+  flex: 1;
+  color: var(--muted);
+}
+
+.tempoGo {
+  border: 0;
+  padding: 0;
+  background: none;
+  color: var(--link);
+  font-size: 12px;
+}
+
+.tempoHint {
+  margin: 4px 0 0;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.popRight {
+  left: auto;
+  right: 0;
+}
+
+.sigInput {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  gap: 4px !important;
+}
+
+.sigInput input {
+  width: 52px !important;
+}
+
+.sigInput select {
+  width: 58px;
+  height: 32px;
+  font-size: 14px;
+}
+
+.kitLoading {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.kitError {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--warn);
+  font-size: 12px;
+}

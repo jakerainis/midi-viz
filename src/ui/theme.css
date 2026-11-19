@@ -1,0 +1,291 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+/*
+ * Design tokens. Dark is the reference (the design canvas); light mirrors it. The theme is chosen in
+ * Settings (system / dark / light) and lands on <html data-theme>. The accent comes from prefs as --accent.
+ */
+:root,
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #0d0e11;
+  --panel: #14161b;
+  --raised: #1b1e25;
+  --pressed: #262a33;
+  --line: #262a33;
+  --line-strong: #2e333d;
+  --line-soft: #1f232b;
+  --control-line: #3a3f4b;
+  --text: #e8eaee;
+  --text-strong: #ffffff;
+  --text-2: #c9cdd5;
+  --muted: #a0a6b2;
+  --dim: #7c8390;
+  --link: #5ba8ff;
+  --select: #5ba8ff;
+  --ok: #4fd1a5;
+  --ok-soft: #7fd8b0;
+  --warn: #ffb36b;
+  --danger: #f2665a;
+  --overlay: rgba(6, 7, 9, 0.78);
+  --shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+  --clip-text: #f4f5f7;
+  --clip-tick: #f4f1ec;
+  --grid-bar: #262a33;
+  --grid-beat: #181b21;
+  --grid-sub: #14161b;
+  --wash: rgba(255, 255, 255, 0.035);
+  --vel-1: #6b3f1d;
+  --vel-2: #a65e25;
+  --vel-3: #e07f2e;
+  --vel-4: #ffb36b;
+  --chip-ok-bg: #1f2a24;
+  --chip-fixed-bg: #14273d;
+  --chip-fixed-fg: #8ec3ff;
+  --chip-fallback-bg: #3d2a12;
+  --accent-ink: #1a1206;
+  --invert-bg: #e8eaee;
+  --invert-fg: #0d0e11;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+  --bg: #eef0f3;
+  --panel: #ffffff;
+  --raised: #f5f6f8;
+  --pressed: #e2e5ea;
+  --line: #dcdfe5;
+  --line-strong: #cdd1d8;
+  --line-soft: #e9ebef;
+  --control-line: #c3c8d0;
+  --text: #16181d;
+  --text-strong: #000000;
+  --text-2: #2e333b;
+  --muted: #5b626e;
+  --dim: #7a818c;
+  --link: #1f6fd1;
+  --select: #2f80ed;
+  --ok: #1d9a72;
+  --ok-soft: #1d9a72;
+  --warn: #b5650f;
+  --danger: #d0443a;
+  --overlay: rgba(30, 33, 40, 0.32);
+  --shadow: 0 24px 60px rgba(20, 24, 32, 0.18);
+  --clip-text: #ffffff;
+  --clip-tick: #ffffff;
+  --grid-bar: #d3d7de;
+  --grid-beat: #e6e8ec;
+  --grid-sub: #eef0f3;
+  --wash: rgba(0, 0, 0, 0.035);
+  --vel-1: #f6d4b2;
+  --vel-2: #f0a766;
+  --vel-3: #e07f2e;
+  --vel-4: #b8580d;
+  --chip-ok-bg: #dcf3ea;
+  --chip-fixed-bg: #dcebfd;
+  --chip-fixed-fg: #1f5fae;
+  --chip-fallback-bg: #fbe9d6;
+  --accent-ink: #1a1206;
+  --invert-bg: #16181d;
+  --invert-fg: #ffffff;
+}
+
+:root {
+  --accent: #ff9f43;
+  --font: Inter, system-ui, -apple-system, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --head-w: 184px;
+  font-family: var(--font);
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  overflow: hidden;
+}
+
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+a {
+  color: var(--link);
+}
+
+kbd {
+  font-family: var(--mono);
+}
+
+:focus-visible {
+  outline: 2px solid var(--select);
+  outline-offset: 1px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ---- shared controls ---- */
+
+.seg {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+
+.seg > button {
+  height: 24px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.seg > button[aria-pressed='true'],
+.seg > button[aria-checked='true'] {
+  background: var(--pressed);
+  color: var(--text-strong);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--raised);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.btn:hover:not(:disabled) {
+  border-color: var(--control-line);
+}
+
+.btn[aria-pressed='true'] {
+  background: var(--pressed);
+  color: var(--text-strong);
+}
+
+.btn-primary {
+  border: 0;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 600;
+}
+
+.btn-invert {
+  border: 0;
+  background: var(--invert-bg);
+  color: var(--invert-fg);
+  font-weight: 600;
+}
+
+.icon-btn {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+}
+
+.icon-btn:hover:not(:disabled) {
+  background: var(--raised);
+  color: var(--text);
+}
+
+.icon-btn[aria-pressed='true'] {
+  background: var(--pressed);
+  color: var(--accent);
+}
+
+.select,
+.input {
+  height: 28px;
+  padding: 0 8px;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.mono {
+  font-family: var(--mono);
+}
+
+.kbd {
+  font: 500 11px var(--mono);
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 1px 5px;
+}
+
+input[type='range'] {
+  accent-color: var(--accent);
+  width: 100%;
+}
+
+input[type='checkbox'],
+input[type='radio'] {
+  accent-color: var(--accent);
+}
+
+/* Thin scrollbars that suit both themes. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--control-line) transparent;
+}

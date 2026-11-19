@@ -1,0 +1,1052 @@
+{
+  "version": 1,
+  "id": "crocell",
+  "name": "CrocellKit",
+  "about": {
+    "description": "The kit of Danish metal band Crocell, sampled while they recorded their 2018 album Relics. A stereo mix of close mics, overheads and room.",
+    "credit": "CrocellKit by the DrumGizmo team: sampled and prepared by Lars Muldjord, kit setup by Andreas of Crocell, mic setup by Jacob Olsen (JBOSound). Stereo mix by Henry Järvinen.",
+    "license": "CC BY 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+    "url": "https://drumgizmo.org/wiki/doku.php?id=kits:crocellkit",
+    "changes": "A subset of hits picked as velocity layers and round-robins, tails trimmed and faded, levels rebalanced per drum, resampled to 44.1 kHz 16-bit FLAC; floor tom 1 also retuned for tom 3.",
+    "notes": [
+      "Kick alternates hits from the left and right pedals as round-robins.",
+      "The kit has four toms. Tom 3 is floor tom 1 retuned up 2.5 semitones, halfway to rack tom 2, so a fill down five toms still steps down.",
+      "FX cymbal 1 is the second splash. FX cymbal 2 (stack) shares the left china, as the kit has no stack.",
+      "Ride crash plays the kit's third crash (an extra one on the right), as the kit has no crashed-ride samples.",
+      "Crash chokes are real grabbed-crash samples. Not used: the snare rim, rimshot and rest strokes, and two extra hi-hat articulations."
+    ]
+  },
+  "sampleRate": 44100,
+  "pieces": [
+    {
+      "id": "kick",
+      "sampleName": "Kick, both pedals"
+    },
+    {
+      "id": "snare",
+      "sampleName": "Snare"
+    },
+    {
+      "id": "tom1",
+      "sampleName": "Rack tom 1"
+    },
+    {
+      "id": "tom2",
+      "sampleName": "Rack tom 2"
+    },
+    {
+      "id": "tom3",
+      "sampleName": "Floor tom 1, tuned up"
+    },
+    {
+      "id": "tom4",
+      "sampleName": "Floor tom 1"
+    },
+    {
+      "id": "tom5",
+      "sampleName": "Floor tom 2"
+    },
+    {
+      "id": "hihat",
+      "sampleName": "Hi-hat"
+    },
+    {
+      "id": "crash1",
+      "sampleName": "Left crash"
+    },
+    {
+      "id": "crash2",
+      "sampleName": "Right crash"
+    },
+    {
+      "id": "splash1",
+      "sampleName": "Left splash"
+    },
+    {
+      "id": "fx1",
+      "sampleName": "Right splash"
+    },
+    {
+      "id": "fx2",
+      "sampleName": "Left china (shared)"
+    },
+    {
+      "id": "china1",
+      "sampleName": "Right china"
+    },
+    {
+      "id": "china2",
+      "sampleName": "Left china"
+    },
+    {
+      "id": "ride",
+      "sampleName": "Ride"
+    }
+  ],
+  "articulations": [
+    {
+      "id": "kick",
+      "piece": "kick",
+      "note": 36,
+      "layers": [
+        {
+          "velocity": 33,
+          "files": [
+            "kick/v033-rr1.flac",
+            "kick/v033-rr2.flac",
+            "kick/v033-rr3.flac",
+            "kick/v033-rr4.flac",
+            "kick/v033-rr5.flac"
+          ]
+        },
+        {
+          "velocity": 53,
+          "files": [
+            "kick/v053-rr1.flac",
+            "kick/v053-rr2.flac",
+            "kick/v053-rr3.flac",
+            "kick/v053-rr4.flac",
+            "kick/v053-rr5.flac",
+            "kick/v053-rr6.flac"
+          ]
+        },
+        {
+          "velocity": 64,
+          "files": [
+            "kick/v064-rr1.flac",
+            "kick/v064-rr2.flac",
+            "kick/v064-rr3.flac",
+            "kick/v064-rr4.flac",
+            "kick/v064-rr5.flac",
+            "kick/v064-rr6.flac"
+          ]
+        },
+        {
+          "velocity": 82,
+          "files": [
+            "kick/v082-rr1.flac",
+            "kick/v082-rr2.flac",
+            "kick/v082-rr3.flac",
+            "kick/v082-rr4.flac",
+            "kick/v082-rr5.flac",
+            "kick/v082-rr6.flac"
+          ]
+        },
+        {
+          "velocity": 95,
+          "files": [
+            "kick/v095-rr1.flac",
+            "kick/v095-rr2.flac",
+            "kick/v095-rr3.flac",
+            "kick/v095-rr4.flac",
+            "kick/v095-rr5.flac",
+            "kick/v095-rr6.flac"
+          ]
+        },
+        {
+          "velocity": 112,
+          "files": [
+            "kick/v112-rr1.flac",
+            "kick/v112-rr2.flac",
+            "kick/v112-rr3.flac",
+            "kick/v112-rr4.flac",
+            "kick/v112-rr5.flac",
+            "kick/v112-rr6.flac"
+          ]
+        },
+        {
+          "velocity": 127,
+          "files": [
+            "kick/v127-rr1.flac",
+            "kick/v127-rr2.flac",
+            "kick/v127-rr3.flac",
+            "kick/v127-rr4.flac",
+            "kick/v127-rr5.flac",
+            "kick/v127-rr6.flac"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "snare",
+      "piece": "snare",
+      "note": 38,
+      "layers": [
+        {
+          "velocity": 14,
+          "files": [
+            "snare/v014-rr1.flac",
+            "snare/v014-rr2.flac",
+            "snare/v014-rr3.flac"
+          ]
+        },
+        {
+          "velocity": 29,
+          "files": [
+            "snare/v029-rr1.flac",
+            "snare/v029-rr2.flac",
+            "snare/v029-rr3.flac",
+            "snare/v029-rr4.flac",
+            "snare/v029-rr5.flac"
+          ]
+        },
+        {
+          "velocity": 46,
+          "files": [
+            "snare/v046-rr1.flac",
+            "snare/v046-rr2.flac",
+            "snare/v046-rr3.flac",
+            "snare/v046-rr4.flac",
+            "snare/v046-rr5.flac"
+          ]
+        },
+        {
+          "velocity": 62,
+          "files": [
+            "snare/v062-rr1.flac",
+            "snare/v062-rr2.flac",
+            "snare/v062-rr3.flac",
+            "snare/v062-rr4.flac",
+            "snare/v062-rr5.flac"
+          ]
+        },
+        {
+          "velocity": 80,
+          "files": [
+            "snare/v080-rr1.flac",
+            "snare/v080-rr2.flac",
+            "snare/v080-rr3.flac",
+            "snare/v080-rr4.flac",
+            "snare/v080-rr5.flac"
+          ]
+        },
+        {
+          "velocity": 94,
+          "files": [
+            "snare/v094-rr1.flac",
+            "snare/v094-rr2.flac",
+            "snare/v094-rr3.flac",
+            "snare/v094-rr4.flac",
+            "snare/v094-rr5.flac"
+          ]
+        },
+        {
+          "velocity": 111,
+          "files": [
+            "snare/v111-rr1.flac",
+            "snare/v111-rr2.flac",
+            "snare/v111-rr3.flac",
+            "snare/v111-rr4.flac",
+            "snare/v111-rr5.flac"
+          ]
+        },
+        {
+          "velocity": 127,
+          "files": [
+            "snare/v127-rr1.flac",
+            "snare/v127-rr2.flac",
+            "snare/v127-rr3.flac",
+            "snare/v127-rr4.flac",
+            "snare/v127-rr5.flac"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "tom1",
+      "piece": "tom1",
+      "note": 48,
+      "layers": [
+        {
+          "velocity": 31,
+          "files": [
+            "tom1/v031-rr1.flac",
+            "tom1/v031-rr2.flac"
+          ]
+        },
+        {
+          "velocity": 53,
+          "files": [
+            "tom1/v053-rr1.flac",
+            "tom1/v053-rr2.flac",
+            "tom1/v053-rr3.flac"
+          ]
+        },
+        {
+          "velocity": 79,
+          "files": [
+            "tom1/v079-rr1.flac",
+            "tom1/v079-rr2.flac",
+            "tom1/v079-rr3.flac"
+          ]
+        },
+        {
+          "velocity": 103,
+          "files": [
+            "tom1/v103-rr1.flac",
+            "tom1/v103-rr2.flac",
+            "tom1/v103-rr3.flac"
+          ]
+        },
+        {
+          "velocity": 127,
+          "files": [
+            "tom1/v127-rr1.flac",
+            "tom1/v127-rr2.flac",
+            "tom1/v127-rr3.flac"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "tom2",
+      "piece": "tom2",
+      "note": 47,
+      "layers": [
+        {
+          "velocity": 18,
+          "files": [
+            "tom2/v018-rr1.flac",
+            "tom2/v018-rr2.flac",
+            "tom2/v018-rr3.flac"
+          ]
+        },
+        {
+          "velocity": 46,
+          "files": [
+            "tom2/v046-rr1.flac",
+            "tom2/v046-rr2.flac",
+            "tom2/v046-rr3.flac"
+          ]
+        },
+        {
+          "velocity": 74,
+          "files": [
+            "tom2/v074-rr1.flac",
+            "tom2/v074-rr2.flac",
+            "tom2/v074-rr3.flac"
+          ]
+        },
+        {
+          "velocity": 102,
+          "files": [
+            "tom2/v102-rr1.flac",
+            "tom2/v102-rr2.flac",
+            "tom2/v102-rr3.flac"
+          ]
+        },
+        {
+          "velocity": 127,
+          "files": [
+            "tom2/v127-rr1.flac",
+            "tom2/v127-rr2.flac",
+            "tom2/v127-rr3.flac"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "tom3",
+      "piece": "tom3",
+      "note": 45,
+      "layers": [
+        {
+          "velocity": 11,
+          "files": [
+            "tom3/v011-rr1.flac",
+            "tom3/v011-rr2.flac"
+          ]
+        },
+        {
+          "velocity": 40,
+          "files": [
+            "tom3/v040-rr1.flac",
+            "tom3/v040-rr2.flac",
+            "tom3/v040-rr3.flac"
+          ]
+        },
+        {
+          "velocity": 71,
+          "files": [
+            "tom3/v071-rr1.flac",
+            "tom3/v071-rr2.flac",
+            "tom3/v071-rr3.flac"
+          ]
+        },
+        {
+          "velocity": 101,
+          "files": [
+            "tom3/v101-rr1.flac",
+            "tom3/v101-rr2.flac",
+            "tom3/v101-rr3.flac"
+          ]
+        },
+        {
+          "velocity": 127,
+          "files": [
+            "tom3/v127-rr1.flac",
+            "tom3/v127-rr2.flac",
+            "tom3/v127-rr3.flac"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "tom4",
+      "piece": "tom4",
+      "note": 43,
+      "layers": [
+        {
+          "velocity": 11,
+          "files": [
+            "tom4/v011-rr1.flac",
+            "tom4/v011-rr2.flac"
+          ]
+        },
+        {
+          "velocity": 39,
+          "files": [
+            "tom4/v039-rr1.flac",
+            "tom4/v039-rr2.flac",
+            "tom4/v039-rr3.flac"
+          ]
+        },
+        {
+          "velocity": 68,
+          "files": [
+            "tom4/v068-rr1.flac",
+            "tom4/v068-rr2.flac",
+            "tom4/v068-rr3.flac"
+          ]
+        },
+        {
+          "velocity": 101,
+          "files": [
+            "tom4/v101-rr1.flac",
+            "tom4/v101-rr2.flac",
+            "tom4/v101-rr3.flac"
+          ]
+        },
+        {
+          "velocity": 127,
+          "files": [
+            "tom4/v127-rr1.flac",
+            "tom4/v127-rr2.flac",
+            "tom4/v127-rr3.flac"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "tom5",
+      "piece": "tom5",
+      "note": 41,
+      "layers": [
+        {
+          "velocity": 15,
+          "files": [
+            "tom5/v015-rr1.flac",
+            "tom5/v015-rr2.flac"
+          ]
+        },
+        {
+          "velocity": 44,
+          "files": [
+            "tom5/v044-rr1.flac",
+            "tom5/v044-rr2.flac",
+            "tom5/v044-rr3.flac"
+          ]
+        },
+        {
+          "velocity": 71,
+          "files": [
+            "tom5/v071-rr1.flac",
+            "tom5/v071-rr2.flac",
+            "tom5/v071-rr3.flac"
+          ]
+        },
+        {
+          "velocity": 98,
+          "files": [
+            "tom5/v098-rr1.flac",
+            "tom5/v098-rr2.flac",
+            "tom5/v098-rr3.flac"
+          ]
+        },
+        {
+          "velocity": 127,
+          "files": [
+            "tom5/v127-rr1.flac",
+            "tom5/v127-rr2.flac",
+            "tom5/v127-rr3.flac"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hihat_closed",
+      "piece": "hihat",
+      "note": 42,
+      "layers": [
+        {
+          "velocity": 16,
+          "files": [
+            "hihat_closed/v016-rr1.flac",
+            "hihat_closed/v016-rr2.flac"
+          ]
+        },
+        {
+          "velocity": 40,
+          "files": [
+            "hihat_closed/v040-rr1.flac",
+            "hihat_closed/v040-rr2.flac",
+            "hihat_closed/v040-rr3.flac",
+            "hihat_closed/v040-rr4.flac"
+          ]
+        },
+        {
+          "velocity": 59,
+          "files": [
+            "hihat_closed/v059-rr1.flac",
+            "hihat_closed/v059-rr2.flac",
+            "hihat_closed/v059-rr3.flac",
+            "hihat_closed/v059-rr4.flac",
+            "hihat_closed/v059-rr5.flac"
+          ]
+        },
+        {
+          "velocity": 85,
+          "files": [
+            "hihat_closed/v085-rr1.flac",
+            "hihat_closed/v085-rr2.flac",
+            "hihat_closed/v085-rr3.flac",
+            "hihat_closed/v085-rr4.flac",
+            "hihat_closed/v085-rr5.flac"
+          ]
+        },
+        {
+          "velocity": 106,
+          "files": [
+            "hihat_closed/v106-rr1.flac",
+            "hihat_closed/v106-rr2.flac",
+            "hihat_closed/v106-rr3.flac",
+            "hihat_closed/v106-rr4.flac",
+            "hihat_closed/v106-rr5.flac"
+          ]
+        },
+        {
+          "velocity": 127,
+          "files": [
+            "hihat_closed/v127-rr1.flac",
+            "hihat_closed/v127-rr2.flac",
+            "hihat_closed/v127-rr3.flac",
+            "hihat_closed/v127-rr4.flac",
+            "hihat_closed/v127-rr5.flac"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hihat_pedal",
+      "piece": "hihat",
+      "note": 44,
+      "layers": [
+        {
+          "velocity": 26,
+          "files": [
+            "hihat_pedal/v026-rr1.flac",
+            "hihat_pedal/v026-rr2.flac"
+          ]
+        },
+        {
+          "velocity": 75,
+          "files": [
+            "hihat_pedal/v075-rr1.flac",
+            "hihat_pedal/v075-rr2.flac"
+          ]
+        },
+        {
+          "velocity": 127,
+          "files": [
+            "hihat_pedal/v127-rr1.flac",
+            "hihat_pedal/v127-rr2.flac",
+            "hihat_pedal/v127-rr3.flac"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hihat_semiopen",
+      "piece": "hihat",
+      "note": 46,
+      "layers": [
+        {
+          "velocity": 16,
+          "files": [
+            "hihat_semiopen/v016-rr1.flac",
+            "hihat_semiopen/v016-rr2.flac"
+          ]
+        },
+        {
+          "velocity": 53,
+          "files": [
+            "hihat_semiopen/v053-rr1.flac",
+            "hihat_semiopen/v053-rr2.flac"
+          ]
+        },
+        {
+          "velocity": 90,
+          "files": [
+            "hihat_semiopen/v090-rr1.flac",
+            "hihat_semiopen/v090-rr2.flac",
+            "hihat_semiopen/v090-rr3.flac"
+          ]
+        },
+        {
+          "velocity": 127,
+          "files": [
+            "hihat_semiopen/v127-rr1.flac",
+            "hihat_semiopen/v127-rr2.flac",
+            "hihat_semiopen/v127-rr3.flac"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hihat_wideopen",
+      "piece": "hihat",
+      "note": 32,
+      "layers": [
+        {
+          "velocity": 28,
+          "files": [
+            "hihat_wideopen/v028-rr1.flac",
+            "hihat_wideopen/v028-rr2.flac"
+          ]
+        },
+        {
+          "velocity": 67,
+          "files": [
+            "hihat_wideopen/v067-rr1.flac",
+            "hihat_wideopen/v067-rr2.flac",
+            "hihat_wideopen/v067-rr3.flac"
+          ]
+        },
+        {
+          "velocity": 93,
+          "files": [
+            "hihat_wideopen/v093-rr1.flac",
+            "hihat_wideopen/v093-rr2.flac",
+            "hihat_wideopen/v093-rr3.flac"
+          ]
+        },
+        {
+          "velocity": 127,
+          "files": [
+            "hihat_wideopen/v127-rr1.flac",
+            "hihat_wideopen/v127-rr2.flac",
+            "hihat_wideopen/v127-rr3.flac"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "crash1",
+      "piece": "crash1",
+      "note": 49,
+      "layers": [
+        {
+          "velocity": 16,
+          "files": [
+            "crash1/v016-rr1.flac",
+            "crash1/v016-rr2.flac"
+          ]
+        },
+        {
+          "velocity": 52,
+          "files": [
+            "crash1/v052-rr1.flac",
+            "crash1/v052-rr2.flac",
+            "crash1/v052-rr3.flac"
+          ]
+        },
+        {
+          "velocity": 88,
+          "files": [
+            "crash1/v088-rr1.flac",
+            "crash1/v088-rr2.flac",
+            "crash1/v088-rr3.flac"
+          ]
+        },
+        {
+          "velocity": 127,
+          "files": [
+            "crash1/v127-rr1.flac",
+            "crash1/v127-rr2.flac",
+            "crash1/v127-rr3.flac"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "crash1_choke",
+      "piece": "crash1",
+      "note": 50,
+      "layers": [
+        {
+          "velocity": 33,
+          "files": [
+            "crash1_choke/v033-rr1.flac",
+            "crash1_choke/v033-rr2.flac"
+          ]
+        },
+        {
+          "velocity": 70,
+          "files": [
+            "crash1_choke/v070-rr1.flac",
+            "crash1_choke/v070-rr2.flac"
+          ]
+        },
+        {
+          "velocity": 127,
+          "files": [
+            "crash1_choke/v127-rr1.flac",
+            "crash1_choke/v127-rr2.flac"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "crash2",
+      "piece": "crash2",
+      "note": 57,
+      "layers": [
+        {
+          "velocity": 16,
+          "files": [
+            "crash2/v016-rr1.flac",
+            "crash2/v016-rr2.flac"
+          ]
+        },
+        {
+          "velocity": 54,
+          "files": [
+            "crash2/v054-rr1.flac",
+            "crash2/v054-rr2.flac",
+            "crash2/v054-rr3.flac"
+          ]
+        },
+        {
+          "velocity": 100,
+          "files": [
+            "crash2/v100-rr1.flac",
+            "crash2/v100-rr2.flac",
+            "crash2/v100-rr3.flac"
+          ]
+        },
+        {
+          "velocity": 127,
+          "files": [
+            "crash2/v127-rr1.flac",
+            "crash2/v127-rr2.flac",
+            "crash2/v127-rr3.flac"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "crash2_choke",
+      "piece": "crash2",
+      "note": 58,
+      "layers": [
+        {
+          "velocity": 45,
+          "files": [
+            "crash2_choke/v045-rr1.flac",
+            "crash2_choke/v045-rr2.flac"
+          ]
+        },
+        {
+          "velocity": 78,
+          "files": [
+            "crash2_choke/v078-rr1.flac",
+            "crash2_choke/v078-rr2.flac"
+          ]
+        },
+        {
+          "velocity": 127,
+          "files": [
+            "crash2_choke/v127-rr1.flac",
+            "crash2_choke/v127-rr2.flac"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "splash1",
+      "piece": "splash1",
+      "note": 55,
+      "layers": [
+        {
+          "velocity": 18,
+          "files": [
+            "splash1/v018-rr1.flac",
+            "splash1/v018-rr2.flac"
+          ]
+        },
+        {
+          "velocity": 84,
+          "files": [
+            "splash1/v084-rr1.flac",
+            "splash1/v084-rr2.flac"
+          ]
+        },
+        {
+          "velocity": 127,
+          "files": [
+            "splash1/v127-rr1.flac",
+            "splash1/v127-rr2.flac"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fx1",
+      "piece": "fx1",
+      "note": 56,
+      "layers": [
+        {
+          "velocity": 25,
+          "files": [
+            "fx1/v025-rr1.flac",
+            "fx1/v025-rr2.flac"
+          ]
+        },
+        {
+          "velocity": 74,
+          "files": [
+            "fx1/v074-rr1.flac",
+            "fx1/v074-rr2.flac"
+          ]
+        },
+        {
+          "velocity": 127,
+          "files": [
+            "fx1/v127-rr1.flac",
+            "fx1/v127-rr2.flac"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "china1",
+      "piece": "china1",
+      "note": 52,
+      "layers": [
+        {
+          "velocity": 21,
+          "files": [
+            "china1/v021-rr1.flac",
+            "china1/v021-rr2.flac"
+          ]
+        },
+        {
+          "velocity": 55,
+          "files": [
+            "china1/v055-rr1.flac",
+            "china1/v055-rr2.flac"
+          ]
+        },
+        {
+          "velocity": 86,
+          "files": [
+            "china1/v086-rr1.flac",
+            "china1/v086-rr2.flac",
+            "china1/v086-rr3.flac"
+          ]
+        },
+        {
+          "velocity": 127,
+          "files": [
+            "china1/v127-rr1.flac",
+            "china1/v127-rr2.flac",
+            "china1/v127-rr3.flac"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "china2",
+      "piece": "china2",
+      "note": 61,
+      "layers": [
+        {
+          "velocity": 10,
+          "files": [
+            "china2/v010-rr1.flac",
+            "china2/v010-rr2.flac"
+          ]
+        },
+        {
+          "velocity": 42,
+          "files": [
+            "china2/v042-rr1.flac",
+            "china2/v042-rr2.flac"
+          ]
+        },
+        {
+          "velocity": 87,
+          "files": [
+            "china2/v087-rr1.flac",
+            "china2/v087-rr2.flac",
+            "china2/v087-rr3.flac"
+          ]
+        },
+        {
+          "velocity": 127,
+          "files": [
+            "china2/v127-rr1.flac",
+            "china2/v127-rr2.flac",
+            "china2/v127-rr3.flac"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fx2",
+      "piece": "fx2",
+      "note": 59,
+      "from": "china2",
+      "layers": [
+        {
+          "velocity": 10,
+          "files": [
+            "china2/v010-rr1.flac",
+            "china2/v010-rr2.flac"
+          ]
+        },
+        {
+          "velocity": 42,
+          "files": [
+            "china2/v042-rr1.flac",
+            "china2/v042-rr2.flac"
+          ]
+        },
+        {
+          "velocity": 87,
+          "files": [
+            "china2/v087-rr1.flac",
+            "china2/v087-rr2.flac",
+            "china2/v087-rr3.flac"
+          ]
+        },
+        {
+          "velocity": 127,
+          "files": [
+            "china2/v127-rr1.flac",
+            "china2/v127-rr2.flac",
+            "china2/v127-rr3.flac"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ride_bow",
+      "piece": "ride",
+      "note": 51,
+      "layers": [
+        {
+          "velocity": 17,
+          "files": [
+            "ride_bow/v017-rr1.flac",
+            "ride_bow/v017-rr2.flac",
+            "ride_bow/v017-rr3.flac"
+          ]
+        },
+        {
+          "velocity": 58,
+          "files": [
+            "ride_bow/v058-rr1.flac",
+            "ride_bow/v058-rr2.flac",
+            "ride_bow/v058-rr3.flac"
+          ]
+        },
+        {
+          "velocity": 94,
+          "files": [
+            "ride_bow/v094-rr1.flac",
+            "ride_bow/v094-rr2.flac",
+            "ride_bow/v094-rr3.flac"
+          ]
+        },
+        {
+          "velocity": 127,
+          "files": [
+            "ride_bow/v127-rr1.flac",
+            "ride_bow/v127-rr2.flac",
+            "ride_bow/v127-rr3.flac"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ride_bell",
+      "piece": "ride",
+      "note": 53,
+      "layers": [
+        {
+          "velocity": 21,
+          "files": [
+            "ride_bell/v021-rr1.flac",
+            "ride_bell/v021-rr2.flac"
+          ]
+        },
+        {
+          "velocity": 70,
+          "files": [
+            "ride_bell/v070-rr1.flac",
+            "ride_bell/v070-rr2.flac",
+            "ride_bell/v070-rr3.flac"
+          ]
+        },
+        {
+          "velocity": 127,
+          "files": [
+            "ride_bell/v127-rr1.flac",
+            "ride_bell/v127-rr2.flac",
+            "ride_bell/v127-rr3.flac"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ride_crash",
+      "piece": "ride",
+      "note": 54,
+      "layers": [
+        {
+          "velocity": 20,
+          "files": [
+            "ride_crash/v020-rr1.flac",
+            "ride_crash/v020-rr2.flac"
+          ]
+        },
+        {
+          "velocity": 65,
+          "files": [
+            "ride_crash/v065-rr1.flac",
+            "ride_crash/v065-rr2.flac"
+          ]
+        },
+        {
+          "velocity": 127,
+          "files": [
+            "ride_crash/v127-rr1.flac",
+            "ride_crash/v127-rr2.flac"
+          ]
+        }
+      ]
+    }
+  ]
+}

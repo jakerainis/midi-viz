@@ -1,7 +1,7 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 
-// https://vite.dev/config/
+// Drum kits are static files in public/kits, served at /kits in dev and copied into dist/ by the build.
 export default defineConfig({
   plugins: [react()],
-})
+});

@@ -1,0 +1,321 @@
+.grid {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: max-content;
+  user-select: none;
+}
+
+.rulerRow,
+.velRow,
+.body {
+  display: flex;
+}
+
+.rulerRow {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  height: 24px;
+  border-bottom: 1px solid var(--line-strong);
+  background: var(--panel);
+}
+
+.head,
+.heads {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  flex: 0 0 var(--head);
+  width: var(--head);
+  background: var(--panel);
+  border-right: 1px solid var(--line);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.ruler {
+  position: relative;
+  flex: none;
+  overflow: hidden;
+  cursor: col-resize;
+}
+
+.ruler:hover {
+  background: var(--raised);
+}
+
+.cap {
+  position: absolute;
+  top: 0;
+  left: -6px;
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 8px solid var(--accent);
+  display: none;
+  pointer-events: none;
+  will-change: transform;
+  z-index: 1;
+}
+
+.mark {
+  pointer-events: none;
+  position: absolute;
+  top: 4px;
+  padding-left: 4px;
+  font: 500 11px var(--mono);
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.heads {
+  display: flex;
+  flex-direction: column;
+}
+
+.groupHead {
+  background: var(--line);
+}
+
+.laneHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  border: 0;
+  border-bottom: 1px solid var(--line-soft);
+  background: transparent;
+  text-align: left;
+  font-size: 12px;
+  line-height: 1;
+  color: var(--text-2);
+}
+
+.laneHead[data-alt] {
+  background: color-mix(in srgb, var(--text) 3%, transparent);
+}
+
+.laneHead:hover {
+  background: var(--raised);
+}
+
+.laneHeadOn {
+  background: var(--raised);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.unmapped .laneName {
+  color: var(--warn);
+}
+
+.laneName {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.laneNote {
+  font: 500 11px var(--mono);
+  color: var(--muted);
+}
+
+.notes {
+  position: relative;
+  flex: none;
+  overflow: hidden;
+  cursor: default;
+  touch-action: none;
+}
+
+.tool_draw,
+.tool_line {
+  cursor: crosshair;
+}
+
+.tool_erase {
+  cursor: not-allowed;
+}
+
+.laneBg {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-bottom: 1px solid var(--line-soft);
+  pointer-events: none;
+}
+
+.laneBg[data-alt] {
+  background: color-mix(in srgb, var(--text) 3%, transparent);
+}
+
+.line_bar,
+.line_beat,
+.line_sub {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  pointer-events: none;
+}
+
+.line_bar {
+  background: var(--line-strong);
+  z-index: 1;
+}
+
+.line_beat {
+  background: var(--line);
+}
+
+.line_sub {
+  background: var(--line-soft);
+}
+
+.ghostShade {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--bg) 62%, transparent) 0 6px, color-mix(in srgb, var(--bg) 48%, transparent) 6px 12px);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.brace {
+  position: absolute;
+  top: 0;
+  height: 5px;
+  background: color-mix(in srgb, var(--accent) 70%, transparent);
+  border-radius: 0 0 2px 2px;
+}
+
+.braceEdge {
+  position: absolute;
+  top: -2px;
+  width: 9px;
+  height: 14px;
+  cursor: ew-resize;
+}
+
+.braceEdge[data-edge='start'] {
+  left: -4px;
+}
+
+.braceEdge[data-edge='end'] {
+  right: -4px;
+}
+
+.braceEdge::after {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: 2px;
+  width: 3px;
+  height: 10px;
+  border-radius: 1px;
+  background: var(--accent);
+}
+
+.hit {
+  position: absolute;
+  z-index: 2;
+  border-radius: 3px;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.18);
+  pointer-events: none;
+}
+
+.hitSel {
+  box-shadow: 0 0 0 2px var(--select);
+  z-index: 3;
+}
+
+.marquee {
+  position: absolute;
+  z-index: 4;
+  border: 1px solid var(--select);
+  background: color-mix(in srgb, var(--select) 12%, transparent);
+  pointer-events: none;
+}
+
+.velRow {
+  border-top: 1px solid var(--line-strong);
+}
+
+.velRow .vel {
+  background: color-mix(in srgb, var(--text) 2%, var(--bg));
+}
+
+.velHead {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 6px 12px;
+  font-size: 12px;
+  color: var(--text);
+}
+
+.velHint {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.vel {
+  position: relative;
+  flex: none;
+  overflow: hidden;
+  cursor: ns-resize;
+  touch-action: none;
+}
+
+.velGuide {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 1px dashed var(--line);
+  pointer-events: none;
+}
+
+.velBar {
+  position: absolute;
+  bottom: 0;
+  border-radius: 2px 2px 0 0;
+  pointer-events: none;
+}
+
+.velLine {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.playhead {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--accent);
+  z-index: 3;
+  pointer-events: none;
+  display: none;
+  will-change: transform;
+}
+
+.groupRule {
+  position: absolute;
+  left: 0;
+  right: 0;
+  background: var(--line);
+  pointer-events: none;
+}

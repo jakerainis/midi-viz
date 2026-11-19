@@ -1,0 +1,9 @@
+{
+  "kits": [
+    {
+      "id": "crocell",
+      "name": "CrocellKit",
+      "path": "crocell/kit.json"
+    }
+  ]
+}
